@@ -34,8 +34,9 @@ export function GamePage({
         cardsRemaining={game.remainingDeck.length + (game.currentCard ? 1 : 0)}
       />
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        gap={{ xs: 2, md: 4 }}
+        direction="row"
+        alignItems="flex-start"
+        gap={{ xs: 1.5, sm: 3, md: 4 }}
         sx={{ mt: 3 }}
       >
         {game.currentHand && <ColorPanel color={game.currentHand.color} />}
@@ -60,7 +61,7 @@ export function GamePage({
           ? `現在の色と次の色を確認してください。ラウンド${game.currentRoundNumber}、残り${game.remainingDeck.length + (game.currentCard ? 1 : 0)}枚です`
           : ''}
       </Typography>
-      <Box sx={{ maxWidth: { md: 'calc(100% - 272px)' } }}>
+      <Box>
         {game.phase === 'playing' && (
           <ActionButtons
             onAccept={onAccept}

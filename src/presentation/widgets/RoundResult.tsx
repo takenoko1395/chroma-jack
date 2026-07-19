@@ -1,5 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
 import type { RoundResult as RoundResultModel } from '../../domain/models/game/Round';
+import { ColorValueSummary } from './ColorValueSummary';
 
 type RoundResultProps = {
   result: RoundResultModel;
@@ -13,6 +14,9 @@ export function RoundResult({
   onContinue,
 }: RoundResultProps) {
   const didBurst = result.endReason === 'burst';
+  const resultColor = didBurst
+    ? result.burstHand.color
+    : result.finalHand.color;
   const endMessage =
     result.endReason === 'deckExhausted'
       ? '山札を使い切りました'
@@ -48,6 +52,10 @@ export function RoundResult({
           </Typography>
         </>
       )}
+      <ColorValueSummary
+        color={resultColor}
+        label={didBurst ? '加算後の色（バーストした値）' : '確定した色'}
+      />
       <Button
         variant="contained"
         size="large"

@@ -8,7 +8,7 @@ export class Color {
     readonly red: number,
     readonly green: number,
     readonly blue: number,
-  ) { }
+  ) {}
 
   static create(
     red: number,

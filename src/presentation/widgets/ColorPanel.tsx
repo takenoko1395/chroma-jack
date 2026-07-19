@@ -11,7 +11,7 @@ function toCssColor(color: Color): string {
 
 export function ColorPanel({ color }: ColorPanelProps) {
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ flex: 1.65, minWidth: 0 }}>
       <Typography
         component="h2"
         variant="overline"

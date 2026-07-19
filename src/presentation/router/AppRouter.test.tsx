@@ -27,6 +27,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/#[0-9a-f]{6}/i);
     expect(document.body.textContent).not.toMatch(/RGB\s*\(/i);
+    expect(screen.queryByLabelText(/色の数値/)).not.toBeInTheDocument();
   });
 
   it('途中で止めた場合は未使用カードの残数を保つ', async () => {
@@ -37,6 +38,7 @@ describe('App', () => {
 
     expect(screen.getByText('12枚')).toBeInTheDocument();
     expect(screen.getByText('ラウンド終了')).toBeInTheDocument();
+    expect(screen.getByLabelText('確定した色の数値')).toBeInTheDocument();
   });
 
   it('5ラウンドを終えて結果を表示し、もう一度遊べる', async () => {

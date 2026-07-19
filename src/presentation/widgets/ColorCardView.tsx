@@ -8,7 +8,7 @@ type ColorCardViewProps = {
 export function ColorCardView({ card }: ColorCardViewProps) {
   const { red, green, blue } = card.color;
   return (
-    <Box sx={{ width: { xs: '100%', md: 240 }, flexShrink: 0 }}>
+    <Box sx={{ flex: 1, minWidth: 0, maxWidth: 320 }}>
       <Typography
         component="h2"
         variant="overline"
@@ -22,7 +22,7 @@ export function ColorCardView({ card }: ColorCardViewProps) {
         sx={{
           mt: 0.5,
           width: '100%',
-          height: { xs: 96, sm: 148, md: 240 },
+          height: { xs: 140, sm: 240, md: 280 },
           bgcolor: `rgb(${red}, ${green}, ${blue})`,
           border: '1px solid rgba(0, 0, 0, 0.2)',
           borderRadius: 3,

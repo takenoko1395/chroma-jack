@@ -8,7 +8,7 @@ export class Color {
     readonly red: number,
     readonly green: number,
     readonly blue: number,
-  ) {}
+  ) { }
 
   static create(
     red: number,
@@ -29,14 +29,12 @@ export class Color {
   }
 
   add(other: Color): Color {
-    const added = Color.create(
+    const added = new Color(
       this.red + other.red,
       this.green + other.green,
       this.blue + other.blue,
     );
-    if (!(added instanceof Color)) {
-      throw new RangeError('The added color exceeds JavaScript safe integers.');
-    }
+
     return added;
   }
 

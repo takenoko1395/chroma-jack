@@ -1,43 +1,50 @@
 import { useCallback, useRef, useState } from 'react';
-import type { GameState } from '../../domain/models/game/Game';
 import { GameScore } from '../../domain/models/game/GameScore';
-import {
-  acceptCurrentCard,
-  discardCurrentCard,
-  INITIAL_GAME_STATE,
-  returnToTitle,
-  standCurrentRound,
-  startGame,
-  startNextRound,
-} from '../../domain/usecases/gameActions';
+import type { GameRules } from '../../domain/models/rules/GameRules';
+import { GameEngine } from '../../domain/usecases/GameEngine';
 import { BrowserRandomGenerator } from '../../gateway/repositories/BrowserRandomGenerator';
 
-export function useChromaJack() {
-  const random = useRef(new BrowserRandomGenerator());
-  const [game, setGame] = useState<GameState>(INITIAL_GAME_STATE);
+// 注入されたルールとReactの画面状態をGameEngineへ接続する。
+export function useChromaJack(rules: GameRules) {
+  const engine = useRef(new GameEngine(rules, new BrowserRandomGenerator()));
+  const pendingRules = useRef(rules);
+  pendingRules.current = rules;
+  const [game, setGame] = useState(() => engine.current.createInitialState());
 
-  const beginGame = useCallback(() => setGame(startGame(random.current)), []);
+  const beginGame = useCallback(() => {
+    if (engine.current.rules !== pendingRules.current) {
+      engine.current = new GameEngine(
+        pendingRules.current,
+        new BrowserRandomGenerator(),
+      );
+    }
+    setGame(engine.current.startGame());
+  }, []);
   const acceptCard = useCallback(
-    () => setGame((current) => acceptCurrentCard(current)),
+    () => setGame((current) => engine.current.acceptCurrentCard(current)),
     [],
   );
   const discardCard = useCallback(
-    () => setGame((current) => discardCurrentCard(current)),
+    () => setGame((current) => engine.current.discardCurrentCard(current)),
     [],
   );
   const standRound = useCallback(
-    () => setGame((current) => standCurrentRound(current)),
+    () => setGame((current) => engine.current.standCurrentRound(current)),
     [],
   );
   const advanceRound = useCallback(
-    () => setGame((current) => startNextRound(current, random.current)),
+    () => setGame((current) => engine.current.startNextRound(current)),
     [],
   );
-  const goToTitle = useCallback(() => setGame(returnToTitle()), []);
+  const goToTitle = useCallback(
+    () => setGame(engine.current.returnToTitle()),
+    [],
+  );
 
   return {
     game,
     totalScore: GameScore.calculate(game.roundResults).value,
+    maximumScore: game.totalRounds * engine.current.rules.scoring.maximumScore,
     beginGame,
     acceptCard,
     discardCard,

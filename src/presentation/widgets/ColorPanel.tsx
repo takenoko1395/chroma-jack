@@ -5,10 +5,12 @@ type ColorPanelProps = {
   color: Color;
 };
 
+// Domainの色をブラウザで描画できるCSSカラーへ変換する。
 function toCssColor(color: Color): string {
   return `rgb(${color.red}, ${color.green}, ${color.blue})`;
 }
 
+// プレイヤーが現在保持している色を最も大きな色面として表示する。
 export function ColorPanel({ color }: ColorPanelProps) {
   return (
     <Box sx={{ flex: 1.65, minWidth: 0 }}>

@@ -12,6 +12,7 @@ describe('GameScore', () => {
     const hand = new Hand(color);
     const results: RoundResult[] = [
       {
+        rulesId: 'test',
         roundNumber: 1,
         finalHand: hand,
         burstHand: null,
@@ -19,6 +20,7 @@ describe('GameScore', () => {
         endReason: 'stood',
       },
       {
+        rulesId: 'test',
         roundNumber: 2,
         finalHand: hand,
         burstHand: hand,

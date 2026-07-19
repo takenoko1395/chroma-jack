@@ -8,6 +8,7 @@ type RoundResultProps = {
   onContinue: () => void;
 };
 
+// 終了理由、得点、確定色またはバースト後の値を表示する。
 export function RoundResult({
   result,
   isLastRound,

@@ -8,6 +8,7 @@ type GameStatusProps = {
   cardsRemaining: number;
 };
 
+// 現在ラウンド、確定済み合計点、カード残数を表示する。
 export function GameStatus({
   currentRound,
   totalRounds,

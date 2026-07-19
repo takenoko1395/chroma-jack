@@ -3,6 +3,7 @@ import type { RoundResult } from '../../domain/models/game/Round';
 
 type ScoreListProps = { results: readonly RoundResult[] };
 
+// 最終結果画面でラウンドごとのスコアを一覧表示する。
 export function ScoreList({ results }: ScoreListProps) {
   return (
     <List disablePadding aria-label="各ラウンドのスコア">

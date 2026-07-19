@@ -23,6 +23,7 @@ function renderResult(result: RoundResultModel) {
 describe('RoundResult', () => {
   it('通常終了後に確定した色の数値を表示する', () => {
     renderResult({
+      rulesId: 'test',
       roundNumber: 1,
       finalHand: createHand(10, 20, 30),
       burstHand: null,
@@ -38,6 +39,7 @@ describe('RoundResult', () => {
 
   it('バースト後に加算後の色の数値を表示する', () => {
     renderResult({
+      rulesId: 'test',
       roundNumber: 1,
       finalHand: createHand(250, 10, 10),
       burstHand: createHand(256, 11, 11),

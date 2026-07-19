@@ -12,6 +12,7 @@ const CHANNELS = [
   { name: 'B', select: (color: Color) => color.blue },
 ] as const;
 
+// ラウンド終了後に限り、振り返り用のRGB値を表示する。
 export function ColorValueSummary({ color, label }: ColorValueSummaryProps) {
   return (
     <Box sx={{ mt: 2.5 }}>

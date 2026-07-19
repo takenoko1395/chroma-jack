@@ -872,22 +872,16 @@ type GameState = {
 - 1つの関数に複数の責務を持たせない
 - UIコンポーネントを巨大化させない
 - マジックナンバーを定数化する
-- ゲーム設定値を一か所にまとめる
+- ゲームルールを`GameRules`へまとめ、ゲーム開始時に外から注入できるようにする
 
-例：
+クラシックルールの例：
 
 ```ts
-export const GAME_CONFIG = {
-  totalRounds: 5,
-  deckSize: 12,
-  initialColorMin: 0,
-  initialColorMax: 127,
-  cardColorMin: 0,
-  cardColorMax: 63,
-  maxChannelValue: 255,
-  maxRoundScore: 1000,
-} as const;
+const rules = GameRules.classic();
+const game = new GameEngine(rules, randomGenerator);
 ```
+
+初期色範囲、色生成傾向、RGB成分ごとの超過処理、クランプ時のスコア上限はPolicyとして差し替え可能にする。Domain Modelからグローバル設定を直接参照せず、1ゲーム中は開始時に注入された同じルールを使用する。
 
 ## 11.3 アクセシビリティ
 

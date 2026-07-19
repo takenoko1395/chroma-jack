@@ -15,6 +15,7 @@ type GamePageProps = {
   onContinue: () => void;
 };
 
+// 現在のラウンド状態、色面、操作またはラウンド結果を表示する。
 export function GamePage({
   game,
   totalScore,

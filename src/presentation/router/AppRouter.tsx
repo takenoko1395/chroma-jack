@@ -2,19 +2,27 @@ import { GamePage } from '../pages/GamePage';
 import { ResultPage } from '../pages/ResultPage';
 import { TitlePage } from '../pages/TitlePage';
 import { useChromaJack } from '../providers/useChromaJack';
-import { GAME_CONFIG } from '../../domain/models/game/gameConfig';
+import { GameRules } from '../../domain/models/rules/GameRules';
 
-export function AppRouter() {
+const DEFAULT_RULES = GameRules.clampChallenge();
+
+type AppRouterProps = {
+  rules?: GameRules;
+};
+
+// ゲーム状態に応じてタイトル・プレイ・最終結果画面を切り替える。
+export function AppRouter({ rules = DEFAULT_RULES }: AppRouterProps) {
   const {
     game,
     totalScore,
+    maximumScore,
     beginGame,
     acceptCard,
     discardCard,
     standRound,
     advanceRound,
     goToTitle,
-  } = useChromaJack();
+  } = useChromaJack(rules);
 
   if (game.phase === 'notStarted') return <TitlePage onStart={beginGame} />;
   if (game.phase === 'gameFinished') {
@@ -22,7 +30,7 @@ export function AppRouter() {
       <ResultPage
         totalScore={totalScore}
         totalRounds={game.totalRounds}
-        maximumScore={game.totalRounds * GAME_CONFIG.maxRoundScore}
+        maximumScore={maximumScore}
         results={game.roundResults}
         onReplay={beginGame}
         onTitle={goToTitle}

@@ -5,6 +5,7 @@ type ColorCardViewProps = {
   card: ColorCard;
 };
 
+// 現在公開されている色カードを数値なしの色面として表示する。
 export function ColorCardView({ card }: ColorCardViewProps) {
   const { red, green, blue } = card.color;
   return (

@@ -37,6 +37,7 @@ npm run build
 - `src/domain/models/color`: 上限を持たない非負整数の色Value Object
 - `src/domain/models/hand`: 色カードと、加算・バースト判定・スコア計算を持つ手札モデル
 - `src/domain/models/game`: ゲーム進行、ラウンド結果、ゲーム設定
+- `src/domain/models/rules`: 色生成傾向、成分別オーバーフロー、スコアのPolicy
 - `src/domain/models/shared`: 検証済み整数範囲などの共有Value Object
 - `src/domain/repositories`: Domainが要求する外部依存のインターフェース
 - `src/domain/usecases`: 開始・加算・破棄・停止・次ラウンドのユースケース
@@ -47,13 +48,24 @@ npm run build
 - `src/presentation/router`: アプリケーション状態に基づく画面切り替え
 - `src/presentation/widgets`: 再利用可能な表示・操作部品
 
-ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。乱数生成はインターフェース越しに差し替えられるため、テストでは固定乱数を使用します。
+ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameEngine`はゲーム開始時に注入された`GameRules`と乱数生成器を保持するため、ゲーム途中でルールが変わりません。初期色範囲、色生成傾向、成分別の超過処理、スコア計算を個別に差し替えられます。
+
+### ルールの差し替え
+
+通常ルールは`GameRules.classic()`です。超過成分を255に固定して続行するプリセットは、Composition Rootから次のように注入できます。
+
+```tsx
+<AppRouter rules={GameRules.clampChallenge()} />
+```
+
+独自ルールでは`GameRules`へ検証済みの色範囲、`ColorGenerationPolicy`、`OverflowPolicy`、`ScorePolicy`を渡します。渡されたルールが表示中に変更されても進行中のゲームには適用せず、次にゲームを開始した時点で採用します。
 
 ## 実装済み機能
 
 - ランダムな初期色と12枚の色カードによる全5ラウンド
 - カードを加える、捨てる、現在色で止める操作
 - 色成分の上限超過によるバースト
+- 外部注入できるゲームルールと、255固定で続行するチャレンジルール
 - 白への距離に基づくラウンドスコアと最終スコア
 - ラウンド結果、全ラウンドのスコア一覧
 - もう一度遊ぶ、タイトルへ戻る操作

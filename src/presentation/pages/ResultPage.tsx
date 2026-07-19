@@ -12,6 +12,7 @@ type ResultPageProps = {
   onTitle: () => void;
 };
 
+// 全ラウンドの合計と内訳、再プレイ操作を表示する最終結果画面。
 export function ResultPage({
   totalScore,
   totalRounds,

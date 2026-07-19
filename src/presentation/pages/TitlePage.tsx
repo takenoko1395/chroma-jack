@@ -3,6 +3,7 @@ import { Box, Button, Container, Stack, Typography } from '@mui/material';
 
 type TitlePageProps = { onStart: () => void };
 
+// ゲーム概要と開始操作を提示するタイトル画面。
 export function TitlePage({ onStart }: TitlePageProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 

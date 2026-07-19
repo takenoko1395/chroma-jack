@@ -54,6 +54,12 @@ the game remains understandable without numeric values.
 - Organize domain models into cohesive folders as complexity grows. Prefer folders
   such as `color`, `hand`, `game`, and `shared`, while adjusting granularity to the
   actual responsibilities rather than enforcing a fixed depth.
+- Write concise Japanese overview comments immediately before models, functions,
+  and methods. Document what each enum represents and what every enum member means.
+  Focus comments on responsibility, constraints, and non-obvious intent; do not add
+  line-by-line narration for behavior that is already clear from the code. Prefer
+  `//` line comments; use block comments only when a genuinely multi-line explanation
+  is necessary.
 
 ## Verification and review
 

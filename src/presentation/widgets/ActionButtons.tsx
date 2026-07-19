@@ -6,6 +6,7 @@ type ActionButtonsProps = {
   onStand: () => void;
 };
 
+// 公開カードに対する加算・破棄・停止操作をまとめて表示する。
 export function ActionButtons({
   onAccept,
   onDiscard,

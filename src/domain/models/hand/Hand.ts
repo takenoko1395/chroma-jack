@@ -1,52 +1,75 @@
 import { Color } from '../color/Color';
+import { COLOR_CHANNELS, type ColorChannel } from '../color/ColorChannel';
+import { OverflowBehavior, type OverflowPolicy } from '../rules/OverflowPolicy';
 import type { ColorCard } from './ColorCard';
 
+// カード加算後にラウンドを継続できるかを示す。
 export enum HandAdditionStatus {
+  // 加算を反映し、ラウンドを継続できる。
   Added = 'added',
+  // 終了対象の成分が上限を超え、ラウンドが終了する。
   Burst = 'burst',
 }
 
+// カード加算後の手札と超過した成分をまとめた結果。
 export type HandAddition = Readonly<{
   status: HandAdditionStatus;
   hand: Hand;
+  overflowedChannels: readonly ColorChannel[];
 }>;
 
+// 現在色とクランプ履歴を保持し、カード加算ルールを実行するモデル。
 export class Hand {
-  static readonly BURST_CHANNEL_LIMIT = 255;
-  static readonly MAXIMUM_SCORE = 1000;
+  static readonly CHANNEL_LIMIT = 255;
+  private readonly clampedChannelSet: ReadonlySet<ColorChannel>;
 
-  constructor(readonly color: Color) {}
+  // 現在色とクランプ履歴から手札を組み立てる。
+  constructor(
+    readonly color: Color,
+    clampedChannels: ReadonlySet<ColorChannel> = new Set(),
+  ) {
+    this.clampedChannelSet = new Set(clampedChannels);
+  }
 
-  add(card: ColorCard): HandAddition {
-    const hand = new Hand(this.color.add(card.color));
+  // クランプ済み成分を外部変更できないコピーとして返す。
+  get clampedChannels(): ReadonlySet<ColorChannel> {
+    return new Set(this.clampedChannelSet);
+  }
+
+  // Policyに従ってカードを加算し、継続またはバースト結果を返す。
+  add(card: ColorCard, overflowPolicy: OverflowPolicy): HandAddition {
+    const attemptedColor = this.color.add(card.color);
+    const overflowedChannels = COLOR_CHANNELS.filter(
+      (channel) => attemptedColor[channel] > Hand.CHANNEL_LIMIT,
+    );
+    const attemptedHand = new Hand(attemptedColor, this.clampedChannelSet);
+    const endsRound = overflowedChannels.some(
+      (channel) =>
+        overflowPolicy.behaviorFor(channel) === OverflowBehavior.EndRound,
+    );
+
+    if (endsRound) {
+      return {
+        status: HandAdditionStatus.Burst,
+        hand: attemptedHand,
+        overflowedChannels,
+      };
+    }
+
+    const resolvedColor = Color.create(
+      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.red),
+      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.green),
+      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.blue),
+    );
+    if (!(resolvedColor instanceof Color)) {
+      throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
+    }
+    const clampedChannels = new Set(this.clampedChannelSet);
+    overflowedChannels.forEach((channel) => clampedChannels.add(channel));
     return {
-      status: hand.isBurst()
-        ? HandAdditionStatus.Burst
-        : HandAdditionStatus.Added,
-      hand,
+      status: HandAdditionStatus.Added,
+      hand: new Hand(resolvedColor, clampedChannels),
+      overflowedChannels,
     };
-  }
-
-  isBurst(): boolean {
-    return (
-      this.color.red > Hand.BURST_CHANNEL_LIMIT ||
-      this.color.green > Hand.BURST_CHANNEL_LIMIT ||
-      this.color.blue > Hand.BURST_CHANNEL_LIMIT
-    );
-  }
-
-  calculateScore(): number {
-    if (this.isBurst()) return 0;
-
-    const maximumDistance = Math.sqrt(3 * Hand.BURST_CHANNEL_LIMIT ** 2);
-    const distance = Math.sqrt(
-      (Hand.BURST_CHANNEL_LIMIT - this.color.red) ** 2 +
-        (Hand.BURST_CHANNEL_LIMIT - this.color.green) ** 2 +
-        (Hand.BURST_CHANNEL_LIMIT - this.color.blue) ** 2,
-    );
-    const score = Math.round(
-      (1 - distance / maximumDistance) * Hand.MAXIMUM_SCORE,
-    );
-    return Math.max(0, Math.min(Hand.MAXIMUM_SCORE, score));
   }
 }

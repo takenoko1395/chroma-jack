@@ -37,6 +37,24 @@ the game remains understandable without numeric values.
   component extraction when a unit has multiple responsibilities or independent
   interaction behavior.
 
+## Domain modeling rules
+
+- Represent validated domain values with value objects instead of passing raw
+  primitives and repeating validation at call sites.
+- Avoid project-specific `Error` classes and generic Rust-inspired `Result<T, E>`
+  abstractions. Represent expected validation failures and business outcomes with
+  small, domain-specific enums and discriminated unions.
+- Reserve thrown built-in errors for violated programmer invariants or unexpected
+  failures; do not use exceptions for expected game outcomes such as a burst.
+- Put business logic on the domain model that owns the rule. Do not add standalone
+  domain functions when the behavior naturally belongs to a model method.
+- A hand owns card addition and burst decisions. Preserve the color produced by a
+  bursting addition in the domain state so it can be inspected later, even when the
+  current UI intentionally continues to show the pre-burst color.
+- Organize domain models into cohesive folders as complexity grows. Prefer folders
+  such as `color`, `hand`, `game`, and `shared`, while adjusting granularity to the
+  actual responsibilities rather than enforcing a fixed depth.
+
 ## Verification and review
 
 - Run the narrowest relevant checks after edits. If no automated checks exist,
@@ -56,4 +74,3 @@ the game remains understandable without numeric values.
 - Do not deploy, publish, apply infrastructure changes, or perform destructive
   operations without explicit user authorization.
 - Gather related approval needs into one request when practical.
-

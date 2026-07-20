@@ -55,7 +55,9 @@ export class Hand {
     overflowedChannels.forEach((channel) => burstChannels.add(channel));
     const attemptedHand = new Hand(attemptedColor, burstChannels);
     const endsRound =
-      !preventBurst && !overflowPolicy.canContinueWith(burstChannels.size);
+      overflowedChannels.length > 0 &&
+      !preventBurst &&
+      !overflowPolicy.canContinueWith(burstChannels.size);
 
     if (endsRound) {
       return {

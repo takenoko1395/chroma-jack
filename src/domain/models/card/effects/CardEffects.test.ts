@@ -35,6 +35,16 @@ describe('color card effects', () => {
     expect(result.hand.color).toMatchObject({ red: 30, green: 0, blue: 30 });
   });
 
+  it('生成後に入力オブジェクトを変更されてもRGB増減量を維持する', () => {
+    const delta = { red: 20, green: 0, blue: 0 };
+    const effect = new AdjustColorEffect(delta);
+    delta.red = 200;
+
+    const result = effect.applyTo(createContext(10, 20, 30));
+
+    expect(result.hand.color.red).toBe(30);
+  });
+
   it('指定された2つの色成分を交換する', () => {
     const result = new SwapColorChannelsEffect(
       ColorChannel.Red,

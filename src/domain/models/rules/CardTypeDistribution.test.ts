@@ -28,4 +28,16 @@ describe('CardTypeDistribution', () => {
       RangeError,
     );
   });
+
+  it('合計が安全な整数を超えるウェイトを拒否する', () => {
+    expect(
+      () =>
+        new CardTypeDistribution(
+          createCardTypeWeights({
+            addColor: Number.MAX_SAFE_INTEGER,
+            preventBurst: 1,
+          }),
+        ),
+    ).toThrow(RangeError);
+  });
 });

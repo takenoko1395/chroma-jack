@@ -144,7 +144,7 @@ describe('GameRound', () => {
     expect(action.round.revealsColorValues).toBe(true);
   });
 
-  it('防止効果が次の終了バーストを1回だけ255固定へ変える', () => {
+  it('防止効果が次の終了バーストだけを255固定へ変え、その後も続行する', () => {
     const color = Color.create(250, 10, 10);
     if (!(color instanceof Color)) return;
     const preventionCard = createSpecialCard(
@@ -153,11 +153,13 @@ describe('GameRound', () => {
       new PreventBurstEffect(),
     );
     const burstCard = createCard('burst', 10, 0, 0);
+    const safeCard = createCard('safe', 0, 1, 0);
+    const finalCard = createCard('final', 0, 0, 1);
     const round = new GameRound({
       roundNumber: 1,
       hand: new Hand(color),
       offeredCards: [preventionCard],
-      remainingDeck: [burstCard],
+      remainingDeck: [burstCard, safeCard, finalCard],
     });
     const protectedRound = round.playCard({
       cardId: preventionCard.id,
@@ -170,8 +172,16 @@ describe('GameRound', () => {
       cardOfferSize: 1,
     });
 
-    expect(action.status).toBe(GameRoundActionStatus.DeckExhausted);
+    expect(action.status).toBe(GameRoundActionStatus.Continued);
     expect(action.round.hand.color.red).toBe(255);
     expect(action.round.burstPreventionCount).toBe(0);
+
+    const safeAction = action.round.playCard({
+      cardId: safeCard.id,
+      overflowPolicy: OverflowPolicy.classic(),
+      cardOfferSize: 1,
+    });
+    expect(safeAction.status).toBe(GameRoundActionStatus.Continued);
+    expect(safeAction.round.hand.color.green).toBe(11);
   });
 });

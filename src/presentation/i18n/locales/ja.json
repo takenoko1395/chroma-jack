@@ -47,14 +47,18 @@
     "swapChannels": "成分交換",
     "adjustSaturation": "彩度操作",
     "adjustBrightness": "明度操作",
-    "continueRound": "候補維持",
+    "continueRound": "ほかの候補を残す",
     "revealColorValues": "数値表示",
     "preventBurst": "バースト防止",
     "details": {
-      "adjustChannels": "{{channel}} {{amount}}",
+      "increaseChannels": "{{channel}}を増やす",
+      "decreaseChannels": "{{channel}}を減らす",
+      "adjustChannelsBothDirections": "{{increase}}を増やし、{{decrease}}を減らす",
       "swapChannels": "{{first}} ⇄ {{second}}",
-      "adjustSaturation": "彩度 {{percentage}}%",
-      "adjustBrightness": "明度 {{amount}}"
+      "increaseSaturation": "彩度を上げる",
+      "decreaseSaturation": "彩度を下げる",
+      "increaseBrightness": "明るくする",
+      "decreaseBrightness": "暗くする"
     }
   },
   "roundResult": {

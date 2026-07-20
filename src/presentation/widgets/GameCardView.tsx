@@ -17,16 +17,17 @@ export function GameCardView({
   onAccept,
 }: GameCardViewProps) {
   const { t } = useTranslation();
+  const effectTitle = t(card.titleKey, card.titleValues);
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
       <Typography variant="body2" fontWeight={700}>
-        {t(card.titleKey, card.titleValues)}
+        {effectTitle}
       </Typography>
       <ButtonBase
-        aria-label={actionLabel}
+        aria-label={`${actionLabel}: ${effectTitle}`}
         onClick={onAccept}
         sx={{
           mt: 0.5,
@@ -38,6 +39,11 @@ export function GameCardView({
           border: '1px solid rgba(0, 0, 0, 0.2)',
           borderRadius: 3,
           boxShadow: '0 12px 32px rgba(0, 0, 0, 0.07)',
+          '&:focus-visible': {
+            outline: '3px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: 3,
+          },
         }}
       />
     </Box>

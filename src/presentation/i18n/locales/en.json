@@ -47,14 +47,18 @@
     "swapChannels": "Swap channels",
     "adjustSaturation": "Adjust saturation",
     "adjustBrightness": "Adjust brightness",
-    "continueRound": "Keep choices",
+    "continueRound": "Keep the other choices",
     "revealColorValues": "Reveal values",
     "preventBurst": "Prevent burst",
     "details": {
-      "adjustChannels": "{{channel}} {{amount}}",
+      "increaseChannels": "Increase {{channel}}",
+      "decreaseChannels": "Decrease {{channel}}",
+      "adjustChannelsBothDirections": "Increase {{increase}}, decrease {{decrease}}",
       "swapChannels": "{{first}} ⇄ {{second}}",
-      "adjustSaturation": "Saturation {{percentage}}%",
-      "adjustBrightness": "Brightness {{amount}}"
+      "increaseSaturation": "Increase saturation",
+      "decreaseSaturation": "Decrease saturation",
+      "increaseBrightness": "Make brighter",
+      "decreaseBrightness": "Make darker"
     }
   },
   "roundResult": {

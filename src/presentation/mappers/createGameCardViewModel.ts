@@ -2,11 +2,6 @@ import type { GameCard } from '../../domain/models/card/GameCard';
 import { CardEffectKind } from '../../domain/models/card/effects/CardEffect';
 import type { GameCardViewModel } from '../models/GameCardViewModel';
 
-// 符号付き数値をカード面で読みやすい表記へ変換する。
-function formatSigned(value: number): string {
-  return value > 0 ? `+${value}` : `${value}`;
-}
-
 // 未対応Effectをコンパイル時と実行時の両方で検出する。
 function assertNever(value: never): never {
   throw new RangeError(`Unsupported card effect: ${value}`);
@@ -26,15 +21,29 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
       const changes = Object.entries(effect.delta).filter(
         ([, value]) => value !== 0,
       );
+      const increasedChannels = changes
+        .filter(([, value]) => value > 0)
+        .map(([channel]) => channel[0]?.toUpperCase());
+      const decreasedChannels = changes
+        .filter(([, value]) => value < 0)
+        .map(([channel]) => channel[0]?.toUpperCase());
+      const changesBothDirections =
+        increasedChannels.length > 0 && decreasedChannels.length > 0;
       return {
         id: card.id,
-        titleKey: 'cards.details.adjustChannels',
-        titleValues: {
-          channel: changes
-            .map(([channel]) => channel[0]?.toUpperCase())
-            .join('/'),
-          amount: changes.map(([, value]) => formatSigned(value)).join('/'),
-        },
+        titleKey: changesBothDirections
+          ? 'cards.details.adjustChannelsBothDirections'
+          : increasedChannels.length > 0
+            ? 'cards.details.increaseChannels'
+            : 'cards.details.decreaseChannels',
+        titleValues: changesBothDirections
+          ? {
+              increase: increasedChannels.join('/'),
+              decrease: decreasedChannels.join('/'),
+            }
+          : {
+              channel: [...increasedChannels, ...decreasedChannels].join('/'),
+            },
         backgroundColor: '#334155',
         backgroundImage:
           'repeating-linear-gradient(135deg, transparent 0 12px, rgba(255,255,255,.16) 12px 24px)',
@@ -55,8 +64,10 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
     case CardEffectKind.AdjustSaturation:
       return {
         id: card.id,
-        titleKey: 'cards.details.adjustSaturation',
-        titleValues: { percentage: effect.percentage },
+        titleKey:
+          effect.percentage > 100
+            ? 'cards.details.increaseSaturation'
+            : 'cards.details.decreaseSaturation',
         backgroundColor: '#be185d',
         backgroundImage:
           'radial-gradient(circle, rgba(255,255,255,.35) 0 10%, transparent 11% 100%)',
@@ -64,8 +75,10 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
     case CardEffectKind.AdjustBrightness:
       return {
         id: card.id,
-        titleKey: 'cards.details.adjustBrightness',
-        titleValues: { amount: formatSigned(effect.amount) },
+        titleKey:
+          effect.amount > 0
+            ? 'cards.details.increaseBrightness'
+            : 'cards.details.decreaseBrightness',
         backgroundColor: '#ca8a04',
         backgroundImage:
           'radial-gradient(circle at center, rgba(255,255,255,.7), transparent 55%)',

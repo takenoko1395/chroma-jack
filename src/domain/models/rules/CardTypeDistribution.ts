@@ -24,11 +24,20 @@ export class CardTypeDistribution {
         'Card type weights must be non-negative integers with a positive total.',
       );
     }
+    const totalWeight = entries.reduce(
+      (total, [, weight]) => total + weight,
+      0,
+    );
+    if (!Number.isSafeInteger(totalWeight)) {
+      throw new RangeError(
+        'The total card type weight must be a safe integer.',
+      );
+    }
     this.weights = Object.freeze({ ...weights });
     this.enabledKinds = entries
       .filter(([, weight]) => weight > 0)
       .map(([kind]) => kind);
-    this.totalWeight = entries.reduce((total, [, weight]) => total + weight, 0);
+    this.totalWeight = totalWeight;
   }
 
   // ウェイトに従ってカード種類を1つ選択する。

@@ -11,10 +11,10 @@ import {
 // RGB成分ごとの増減量を現在色へ反映するカード効果。
 export class AdjustColorEffect implements CardEffectContract {
   readonly kind = CardEffectKind.AdjustChannels;
+  readonly delta: Readonly<{ red: number; green: number; blue: number }>;
+
   // RGB成分ごとの符号付き変更量を保持する。
-  constructor(
-    readonly delta: Readonly<{ red: number; green: number; blue: number }>,
-  ) {
+  constructor(delta: Readonly<{ red: number; green: number; blue: number }>) {
     const changes = [delta.red, delta.green, delta.blue];
     if (
       changes.some((change) => !Number.isSafeInteger(change)) ||
@@ -24,6 +24,11 @@ export class AdjustColorEffect implements CardEffectContract {
         'Color adjustment must contain a non-zero integer change.',
       );
     }
+    this.delta = Object.freeze({
+      red: delta.red,
+      green: delta.green,
+      blue: delta.blue,
+    });
   }
 
   // 各成分を0未満にしないよう変更し、上限超過ルールを適用する。

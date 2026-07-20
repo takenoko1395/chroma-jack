@@ -35,7 +35,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Start game' }));
     expect(screen.getByLabelText('Current color')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Use choice 1' }),
+      screen.getByRole('button', { name: /Use choice 1/ }),
     ).toBeInTheDocument();
   });
 
@@ -91,7 +91,7 @@ describe('App', () => {
 
     expect(screen.getByLabelText('現在の色')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 1を使う' }),
+      screen.getByRole('button', { name: /候補 1を使う/ }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: '選んだ色を加える' }),
@@ -118,16 +118,16 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
 
     expect(
-      screen.getByRole('button', { name: '候補 1を使う' }),
+      screen.getByRole('button', { name: /候補 1を使う/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 2を使う' }),
+      screen.getByRole('button', { name: /候補 2を使う/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 3を使う' }),
+      screen.getByRole('button', { name: /候補 3を使う/ }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '候補 2を使う' }));
+    await user.click(screen.getByRole('button', { name: /候補 2を使う/ }));
     expect(screen.getByText('21枚')).toBeInTheDocument();
   });
 

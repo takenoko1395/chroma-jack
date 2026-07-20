@@ -36,6 +36,11 @@ the game remains understandable without numeric values.
 - Split UI components by reason to change, not merely by appearance. Prefer
   component extraction when a unit has multiple responsibilities or independent
   interaction behavior.
+- When a constructor needs three or more arguments, accept one object argument with
+  descriptive property names so each value's meaning is clear at the call site.
+- Treat comments as context for responsibility, constraints, and non-obvious intent,
+  not as compensation for unclear code. Rename ambiguous identifiers and improve the
+  structure when their meaning would otherwise require a clarifying comment.
 
 ## Domain modeling rules
 

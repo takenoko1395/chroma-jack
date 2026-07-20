@@ -1,42 +1,33 @@
-import type { ColorChannel } from '../color/ColorChannel';
-
-// 色成分が上限を超えたときの処理方法を示す。
-export enum OverflowBehavior {
-  // バーストとしてラウンドを終了する。
-  EndRound = 'endRound',
-  // 超過成分を上限へ固定してラウンドを続行する。
-  ClampAndContinue = 'clampAndContinue',
-}
-
-// RGB成分ごとの超過処理を保持するPolicy。
+// 255へ固定しながら続行できる色数の上限を保持するPolicy。
 export class OverflowPolicy {
-  private readonly behaviors: Readonly<Record<ColorChannel, OverflowBehavior>>;
+  static readonly MINIMUM_ALLOWED_BURST_COLORS = 0;
+  static readonly MAXIMUM_ALLOWED_BURST_COLORS = 2;
 
-  // RGB成分ごとの処理を防御コピーして保持する。
-  constructor(behaviors: Readonly<Record<ColorChannel, OverflowBehavior>>) {
-    this.behaviors = Object.freeze({ ...behaviors });
+  // 全色バーストを許可しないよう、0〜2の整数だけを受け付ける。
+  constructor(readonly allowedBurstColors: number) {
+    if (
+      !Number.isSafeInteger(allowedBurstColors) ||
+      allowedBurstColors < OverflowPolicy.MINIMUM_ALLOWED_BURST_COLORS ||
+      allowedBurstColors > OverflowPolicy.MAXIMUM_ALLOWED_BURST_COLORS
+    ) {
+      throw new RangeError(
+        'Allowed burst colors must be an integer from 0 to 2.',
+      );
+    }
   }
 
-  // 指定した色成分へ適用する超過処理を返す。
-  behaviorFor(channel: ColorChannel): OverflowBehavior {
-    return this.behaviors[channel];
+  // 累計バースト色数が許容量内なら、超過成分を255へ固定して続行する。
+  canContinueWith(burstColorCount: number): boolean {
+    return burstColorCount <= this.allowedBurstColors;
   }
 
-  // どの成分が超過してもラウンドを終了するPolicyを生成する。
-  static endRound(): OverflowPolicy {
-    return new OverflowPolicy({
-      red: OverflowBehavior.EndRound,
-      green: OverflowBehavior.EndRound,
-      blue: OverflowBehavior.EndRound,
-    });
+  // 最初の1色が超過した時点で終了する従来ルールを生成する。
+  static classic(): OverflowPolicy {
+    return new OverflowPolicy(0);
   }
 
-  // どの成分が超過しても255へ固定して続行するPolicyを生成する。
-  static clampAndContinue(): OverflowPolicy {
-    return new OverflowPolicy({
-      red: OverflowBehavior.ClampAndContinue,
-      green: OverflowBehavior.ClampAndContinue,
-      blue: OverflowBehavior.ClampAndContinue,
-    });
+  // 指定色数まで255へ固定して続行できるルールを生成する。
+  static clampAndContinue(allowedBurstColors: 1 | 2): OverflowPolicy {
+    return new OverflowPolicy(allowedBurstColors);
   }
 }

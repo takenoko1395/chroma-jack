@@ -85,19 +85,13 @@ describe('game actions', () => {
     }
     const state: GameState = {
       phase: 'playing',
-      rulesId: 'classic',
-      rules: GameRules.classic(),
-      totalRounds: 5,
       currentRoundNumber: 1,
       currentHand: new Hand(currentColor),
       currentCard,
       remainingDeck: [],
       roundResults: [],
     };
-    const stateEngine = new GameEngine(
-      state.rules,
-      new FixedRandomGenerator([1]),
-    );
+    const stateEngine = createEngine([1]);
     const finished = stateEngine.acceptCurrentCard(state);
     expect(finished.phase).toBe('roundFinished');
     expect(finished.currentHand).toBe(state.currentHand);
@@ -110,6 +104,7 @@ describe('game actions', () => {
       green: 11,
       blue: 11,
     });
+    expect(finished.roundResults[0]?.burstChannels).toHaveLength(1);
   });
 
   it('5ラウンド後に終了し、合計スコアを算出する', () => {
@@ -133,44 +128,32 @@ describe('game actions', () => {
     expect(engine.discardCurrentCard(finished)).toBe(finished);
   });
 
-  it('外から注入した初期色上限とルール識別子を使用する', () => {
+  it('外から注入した初期色上限を使用する', () => {
     const base = GameRules.classic();
     const initialRange = IntegerRange.create(0, 10);
     expect(initialRange).toBeInstanceOf(IntegerRange);
     if (!(initialRange instanceof IntegerRange)) return;
-    const rules = new GameRules(
-      'small-initial-color',
-      base.totalRounds,
-      base.deckSize,
-      initialRange,
-      base.cardColorRange,
-      base.initialColorGeneration,
-      base.cardColorGeneration,
-      base.overflow,
-      base.scoring,
-    );
+    const rules = new GameRules({
+      id: 'small-initial-color',
+      totalRounds: base.totalRounds,
+      deckSize: base.deckSize,
+      initialColorRange: initialRange,
+      cardColorRange: base.cardColorRange,
+      initialColorGenerationPolicy: base.initialColorGenerationPolicy,
+      cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+      overflowPolicy: base.overflowPolicy,
+      scorePolicy: base.scorePolicy,
+    });
     const game = new GameEngine(
       rules,
       new FixedRandomGenerator([127]),
     ).startGame();
 
-    expect(game.rulesId).toBe('small-initial-color');
     expect(game.currentHand?.color).toMatchObject({
       red: 10,
       green: 10,
       blue: 10,
     });
-  });
-
-  it('異なるルールで作られた状態を途中から処理しない', () => {
-    const classicEngine = createEngine([10]);
-    const state = classicEngine.startGame();
-    const challengeEngine = new GameEngine(
-      GameRules.clampChallenge(),
-      new FixedRandomGenerator([10]),
-    );
-
-    expect(() => challengeEngine.acceptCurrentCard(state)).toThrow(RangeError);
   });
 
   it('クランプルールでは超過後も次のカードへ進み、得点上限を下げる', () => {
@@ -191,9 +174,6 @@ describe('game actions', () => {
     }
     const state: GameState = {
       phase: 'playing',
-      rulesId: rules.id,
-      rules,
-      totalRounds: rules.totalRounds,
       currentRoundNumber: 1,
       currentHand: new Hand(color),
       currentCard,
@@ -208,6 +188,6 @@ describe('game actions', () => {
     expect(continued.currentCard?.id).toBe('next');
 
     const finished = engine.standCurrentRound(continued);
-    expect(finished.roundResults[0]?.score).toBe(800);
+    expect(finished.roundResults[0]?.score).toBe(600);
   });
 });

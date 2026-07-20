@@ -1,6 +1,6 @@
 import { Color } from '../color/Color';
 import { COLOR_CHANNELS, type ColorChannel } from '../color/ColorChannel';
-import { OverflowBehavior, type OverflowPolicy } from '../rules/OverflowPolicy';
+import type { OverflowPolicy } from '../rules/OverflowPolicy';
 import type { ColorCard } from './ColorCard';
 
 // カード加算後にラウンドを継続できるかを示す。
@@ -42,11 +42,10 @@ export class Hand {
     const overflowedChannels = COLOR_CHANNELS.filter(
       (channel) => attemptedColor[channel] > Hand.CHANNEL_LIMIT,
     );
-    const attemptedHand = new Hand(attemptedColor, this.clampedChannelSet);
-    const endsRound = overflowedChannels.some(
-      (channel) =>
-        overflowPolicy.behaviorFor(channel) === OverflowBehavior.EndRound,
-    );
+    const burstChannels = new Set(this.clampedChannelSet);
+    overflowedChannels.forEach((channel) => burstChannels.add(channel));
+    const attemptedHand = new Hand(attemptedColor, burstChannels);
+    const endsRound = !overflowPolicy.canContinueWith(burstChannels.size);
 
     if (endsRound) {
       return {
@@ -64,11 +63,9 @@ export class Hand {
     if (!(resolvedColor instanceof Color)) {
       throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
     }
-    const clampedChannels = new Set(this.clampedChannelSet);
-    overflowedChannels.forEach((channel) => clampedChannels.add(channel));
     return {
       status: HandAdditionStatus.Added,
-      hand: new Hand(resolvedColor, clampedChannels),
+      hand: new Hand(resolvedColor, burstChannels),
       overflowedChannels,
     };
   }

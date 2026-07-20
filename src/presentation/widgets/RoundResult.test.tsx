@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { Color } from '../../domain/models/color/Color';
+import { ColorChannel } from '../../domain/models/color/ColorChannel';
 import type { RoundResult as RoundResultModel } from '../../domain/models/game/Round';
 import { Hand } from '../../domain/models/hand/Hand';
 import { AppProviders } from '../providers/AppProviders';
@@ -23,10 +24,10 @@ function renderResult(result: RoundResultModel) {
 describe('RoundResult', () => {
   it('通常終了後に確定した色の数値を表示する', () => {
     renderResult({
-      rulesId: 'test',
       roundNumber: 1,
       finalHand: createHand(10, 20, 30),
       burstHand: null,
+      burstChannels: null,
       score: 100,
       endReason: 'stood',
     });
@@ -39,10 +40,10 @@ describe('RoundResult', () => {
 
   it('バースト後に加算後の色の数値を表示する', () => {
     renderResult({
-      rulesId: 'test',
       roundNumber: 1,
       finalHand: createHand(250, 10, 10),
       burstHand: createHand(256, 11, 11),
+      burstChannels: [ColorChannel.Red],
       score: 0,
       endReason: 'burst',
     });
@@ -51,5 +52,6 @@ describe('RoundResult', () => {
     expect(values).toHaveTextContent('R256');
     expect(values).toHaveTextContent('G11');
     expect(values).toHaveTextContent('B11');
+    expect(screen.getByText('1色バースト')).toBeInTheDocument();
   });
 });

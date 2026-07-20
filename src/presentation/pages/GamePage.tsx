@@ -8,6 +8,7 @@ import { RoundResult } from '../widgets/RoundResult';
 
 type GamePageProps = {
   game: GameState;
+  totalRounds: number;
   totalScore: number;
   onAccept: () => void;
   onDiscard: () => void;
@@ -18,6 +19,7 @@ type GamePageProps = {
 // 現在のラウンド状態、色面、操作またはラウンド結果を表示する。
 export function GamePage({
   game,
+  totalRounds,
   totalScore,
   onAccept,
   onDiscard,
@@ -30,7 +32,7 @@ export function GamePage({
     <Container maxWidth="lg" component="main" sx={{ py: { xs: 2.5, sm: 4 } }}>
       <GameStatus
         currentRound={game.currentRoundNumber}
-        totalRounds={game.totalRounds}
+        totalRounds={totalRounds}
         totalScore={totalScore}
         cardsRemaining={game.remainingDeck.length + (game.currentCard ? 1 : 0)}
       />
@@ -64,16 +66,24 @@ export function GamePage({
       </Typography>
       <Box>
         {game.phase === 'playing' && (
-          <ActionButtons
-            onAccept={onAccept}
-            onDiscard={onDiscard}
-            onStand={onStand}
-          />
+          <>
+            {game.currentHand && game.currentHand.clampedChannels.size > 0 && (
+              <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
+                {game.currentHand.clampedChannels.size}
+                色バースト・上限の色で続行します
+              </Typography>
+            )}
+            <ActionButtons
+              onAccept={onAccept}
+              onDiscard={onDiscard}
+              onStand={onStand}
+            />
+          </>
         )}
         {game.phase === 'roundFinished' && result && (
           <RoundResult
             result={result}
-            isLastRound={game.currentRoundNumber === game.totalRounds}
+            isLastRound={game.currentRoundNumber === totalRounds}
             onContinue={onContinue}
           />
         )}

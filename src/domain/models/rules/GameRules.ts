@@ -17,71 +17,109 @@ function createRange(minimum: number, maximum: number): IntegerRange {
   return range;
 }
 
+// GameRulesの生成時に指定する設定値とPolicy一式。
+export type GameRulesArgs = Readonly<{
+  id: string;
+  totalRounds: number;
+  deckSize: number;
+  initialColorRange: IntegerRange;
+  cardColorRange: IntegerRange;
+  initialColorGenerationPolicy: ColorGenerationPolicy;
+  cardColorGenerationPolicy: ColorGenerationPolicy;
+  overflowPolicy: OverflowPolicy;
+  scorePolicy: ScorePolicy;
+}>;
+
 // 1ゲームで固定して使用する生成・超過・採点ルール一式。
 export class GameRules {
+  readonly id: string;
+  readonly totalRounds: number;
+  readonly deckSize: number;
+  readonly initialColorRange: IntegerRange;
+  readonly cardColorRange: IntegerRange;
+  readonly initialColorGenerationPolicy: ColorGenerationPolicy;
+  readonly cardColorGenerationPolicy: ColorGenerationPolicy;
+  readonly overflowPolicy: OverflowPolicy;
+  readonly scorePolicy: ScorePolicy;
+
   // 1ゲームで使用するすべてのPolicyと設定値を検証して保持する。
-  constructor(
-    readonly id: string,
-    readonly totalRounds: number,
-    readonly deckSize: number,
-    readonly initialColorRange: IntegerRange,
-    readonly cardColorRange: IntegerRange,
-    readonly initialColorGeneration: ColorGenerationPolicy,
-    readonly cardColorGeneration: ColorGenerationPolicy,
-    readonly overflow: OverflowPolicy,
-    readonly scoring: ScorePolicy,
-  ) {
-    if (id.trim().length === 0) throw new RangeError('Rules id is required.');
-    if (!Number.isSafeInteger(totalRounds) || totalRounds <= 0) {
+  constructor(args: GameRulesArgs) {
+    if (args.id.trim().length === 0)
+      throw new RangeError('Rules id is required.');
+    if (!Number.isSafeInteger(args.totalRounds) || args.totalRounds <= 0) {
       throw new RangeError('Total rounds must be a positive integer.');
     }
-    if (!Number.isSafeInteger(deckSize) || deckSize <= 0) {
+    if (!Number.isSafeInteger(args.deckSize) || args.deckSize <= 0) {
       throw new RangeError('Deck size must be a positive integer.');
     }
     if (
-      initialColorRange.minimum < 0 ||
-      initialColorRange.maximum > Hand.CHANNEL_LIMIT
+      args.initialColorRange.minimum < 0 ||
+      args.initialColorRange.maximum > Hand.CHANNEL_LIMIT
     ) {
       throw new RangeError('Initial colors must fit within the hand limit.');
     }
     if (
-      cardColorRange.minimum < ColorCard.MINIMUM_CHANNEL ||
-      cardColorRange.maximum > ColorCard.MAXIMUM_CHANNEL ||
-      cardColorRange.maximum === 0
+      args.cardColorRange.minimum < ColorCard.MINIMUM_CHANNEL ||
+      args.cardColorRange.maximum > ColorCard.MAXIMUM_CHANNEL ||
+      args.cardColorRange.maximum === 0
     ) {
       throw new RangeError(
         'Card colors must fit within the card limits and allow a non-black card.',
       );
     }
+
+    this.id = args.id;
+    this.totalRounds = args.totalRounds;
+    this.deckSize = args.deckSize;
+    this.initialColorRange = args.initialColorRange;
+    this.cardColorRange = args.cardColorRange;
+    this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
+    this.cardColorGenerationPolicy = args.cardColorGenerationPolicy;
+    this.overflowPolicy = args.overflowPolicy;
+    this.scorePolicy = args.scorePolicy;
   }
 
   // 従来のバースト終了ルールを生成する。
   static classic(): GameRules {
-    return new GameRules(
-      'classic',
-      5,
-      12,
-      createRange(0, 127),
-      createRange(ColorCard.MINIMUM_CHANNEL, ColorCard.MAXIMUM_CHANNEL),
-      new ColorGenerationPolicy(ColorGenerationTrend.Uniform),
-      new ColorGenerationPolicy(ColorGenerationTrend.Uniform),
-      OverflowPolicy.endRound(),
-      new ScorePolicy(1000, 0),
-    );
+    return new GameRules({
+      id: 'classic',
+      totalRounds: 5,
+      deckSize: 12,
+      initialColorRange: createRange(0, 127),
+      cardColorRange: createRange(
+        ColorCard.MINIMUM_CHANNEL,
+        ColorCard.MAXIMUM_CHANNEL,
+      ),
+      initialColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Uniform,
+      ),
+      cardColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Uniform,
+      ),
+      overflowPolicy: OverflowPolicy.classic(),
+      scorePolicy: new ScorePolicy(1000, 0),
+    });
   }
 
   // 超過成分を固定し、固定数に応じて得点上限を下げるルールを生成する。
   static clampChallenge(): GameRules {
-    return new GameRules(
-      'clamp-challenge',
-      5,
-      12,
-      createRange(0, 159),
-      createRange(ColorCard.MINIMUM_CHANNEL, ColorCard.MAXIMUM_CHANNEL),
-      new ColorGenerationPolicy(ColorGenerationTrend.Uniform),
-      new ColorGenerationPolicy(ColorGenerationTrend.Higher),
-      OverflowPolicy.clampAndContinue(),
-      new ScorePolicy(1000, 200),
-    );
+    return new GameRules({
+      id: 'clamp-challenge',
+      totalRounds: 5,
+      deckSize: 12,
+      initialColorRange: createRange(0, 159),
+      cardColorRange: createRange(
+        ColorCard.MINIMUM_CHANNEL,
+        ColorCard.MAXIMUM_CHANNEL,
+      ),
+      initialColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Uniform,
+      ),
+      cardColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Higher,
+      ),
+      overflowPolicy: OverflowPolicy.clampAndContinue(1),
+      scorePolicy: new ScorePolicy(1000, 400),
+    });
   }
 }

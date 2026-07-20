@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { GameRules } from '../../domain/models/rules/GameRules';
 import { AppProviders } from '../providers/AppProviders';
 import { AppRouter } from './AppRouter';
 
@@ -13,6 +14,51 @@ function renderApp() {
 }
 
 describe('App', () => {
+  it('Classicを初期選択し、開始前にClamp Challengeへ変更できる', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    const rulesSelect = screen.getByRole('combobox', {
+      name: 'ゲームルール',
+    });
+    expect(rulesSelect).toHaveTextContent('Classic');
+
+    await user.click(rulesSelect);
+    await user.click(screen.getByRole('option', { name: 'Clamp Challenge' }));
+
+    expect(rulesSelect).toHaveTextContent('Clamp Challenge');
+    expect(
+      screen.getByText(/1色までバーストしても上限で止まり/),
+    ).toBeInTheDocument();
+    expect(rulesSelect).toHaveAttribute(
+      'aria-describedby',
+      'game-rules-description',
+    );
+    expect(screen.getByText(/得点上限が下がります/)).toBeInTheDocument();
+  });
+
+  it('親が再描画されてもプレイヤーが選んだルールを維持する', async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <AppProviders>
+        <AppRouter initialRules={GameRules.classic()} />
+      </AppProviders>,
+    );
+    const rulesSelect = screen.getByRole('combobox', {
+      name: 'ゲームルール',
+    });
+    await user.click(rulesSelect);
+    await user.click(screen.getByRole('option', { name: 'Clamp Challenge' }));
+
+    view.rerender(
+      <AppProviders>
+        <AppRouter initialRules={GameRules.classic()} />
+      </AppProviders>,
+    );
+
+    expect(rulesSelect).toHaveTextContent('Clamp Challenge');
+  });
+
   it('開始画面からゲームを始め、色面と3操作を表示する', async () => {
     const user = userEvent.setup();
     renderApp();

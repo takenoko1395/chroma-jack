@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import type { RoundResult as RoundResultModel } from '../../domain/models/game/Round';
 import { ColorValueSummary } from './ColorValueSummary';
@@ -14,6 +15,7 @@ export function RoundResult({
   isLastRound,
   onContinue,
 }: RoundResultProps) {
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const didBurst = result.endReason === 'burst';
   const resultColor = didBurst
     ? result.burstHand.color
@@ -22,6 +24,12 @@ export function RoundResult({
     result.endReason === 'deckExhausted'
       ? '山札を使い切りました'
       : 'ここで色を確定しました';
+
+  // 操作ボタンが消えた後も、支援技術がラウンド結果へ移動できるようにする。
+  useEffect(() => {
+    resultHeadingRef.current?.focus();
+  }, []);
+
   return (
     <Box
       aria-live="polite"
@@ -35,7 +43,13 @@ export function RoundResult({
       <Typography variant="overline" color="text.secondary">
         ラウンド終了
       </Typography>
-      <Typography variant="h4" component="h2" sx={{ mt: 0.5 }}>
+      <Typography
+        ref={resultHeadingRef}
+        variant="h4"
+        component="h2"
+        tabIndex={-1}
+        sx={{ mt: 0.5 }}
+      >
         {didBurst ? 'バースト' : `${result.score.toLocaleString()}点`}
       </Typography>
       {!didBurst && (
@@ -45,8 +59,11 @@ export function RoundResult({
       )}
       {didBurst && (
         <>
+          <Typography variant="h6" sx={{ mt: 1 }}>
+            {result.burstChannels.length}色バースト
+          </Typography>
           <Typography color="text.secondary" sx={{ mt: 1 }}>
-            白を通り越してしまいました
+            {result.burstChannels.length}つの色成分が上限を超えました
           </Typography>
           <Typography variant="h6" sx={{ mt: 1.5 }}>
             0点

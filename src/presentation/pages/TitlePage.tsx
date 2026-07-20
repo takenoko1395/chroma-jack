@@ -1,11 +1,42 @@
 import { useEffect, useRef } from 'react';
-import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Typography,
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
+import type { GameRules } from '../../domain/models/rules/GameRules';
 
-type TitlePageProps = { onStart: () => void };
+type TitlePageProps = {
+  ruleOptions: readonly GameRules[];
+  selectedRulesId: string;
+  onSelectRules: (rulesId: string) => void;
+  onStart: () => void;
+};
+
+// プリセットの識別子をコンボボックス用の表示名へ変換する。
+function getRulesLabel(rules: GameRules): string {
+  if (rules.id === 'classic') return 'Classic';
+  if (rules.id === 'clamp-challenge') return 'Clamp Challenge';
+  return rules.id;
+}
 
 // ゲーム概要と開始操作を提示するタイトル画面。
-export function TitlePage({ onStart }: TitlePageProps) {
+export function TitlePage({
+  ruleOptions,
+  selectedRulesId,
+  onSelectRules,
+  onStart,
+}: TitlePageProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const selectedRules =
+    ruleOptions.find((rules) => rules.id === selectedRulesId) ?? ruleOptions[0];
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -49,7 +80,11 @@ export function TitlePage({ onStart }: TitlePageProps) {
           Chroma Jack
         </Typography>
         <Typography
+          id="game-rules-description"
           component="p"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
           sx={{
             mt: 3,
             maxWidth: 500,
@@ -59,15 +94,41 @@ export function TitlePage({ onStart }: TitlePageProps) {
         >
           色を重ねて、白に近づけよう。
           <br />
-          ただし、加えすぎるとバースト。
+          {selectedRules?.overflowPolicy.allowedBurstColors === 0
+            ? 'ただし、加えすぎるとバースト。'
+            : `${selectedRules?.overflowPolicy.allowedBurstColors ?? 0}色までバーストしても上限で止まり、次の色のバーストでラウンド終了。`}
+          {selectedRules?.id === 'clamp-challenge' && (
+            <>
+              <br />
+              初期色とカードは明るめに出やすく、バーストした色があると得点上限が下がります。
+            </>
+          )}
           <br />
           数字ではなく、色だけを信じてください。
         </Typography>
+        <FormControl sx={{ mt: 4, minWidth: { xs: '100%', sm: 280 } }}>
+          <InputLabel id="game-rules-label">ゲームルール</InputLabel>
+          <Select
+            labelId="game-rules-label"
+            value={selectedRulesId}
+            label="ゲームルール"
+            inputProps={{ 'aria-describedby': 'game-rules-description' }}
+            onChange={(event: SelectChangeEvent) =>
+              onSelectRules(event.target.value)
+            }
+          >
+            {ruleOptions.map((option) => (
+              <MenuItem key={option.id} value={option.id}>
+                {getRulesLabel(option)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Button
           variant="contained"
           size="large"
           onClick={onStart}
-          sx={{ mt: 5, minWidth: 210 }}
+          sx={{ mt: 3, minWidth: 210 }}
         >
           ゲームを始める
         </Button>

@@ -43,8 +43,11 @@ export function useChromaJack(rules: GameRules) {
 
   return {
     game,
+    totalRounds: engine.current.rules.totalRounds,
     totalScore: GameScore.calculate(game.roundResults).value,
-    maximumScore: game.totalRounds * engine.current.rules.scoring.maximumScore,
+    maximumScore:
+      engine.current.rules.totalRounds *
+      engine.current.rules.scorePolicy.maximumScore,
     beginGame,
     acceptCard,
     discardCard,

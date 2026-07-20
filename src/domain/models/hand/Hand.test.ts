@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Color } from '../color/Color';
 import { ColorChannel } from '../color/ColorChannel';
-import { OverflowBehavior, OverflowPolicy } from '../rules/OverflowPolicy';
+import { OverflowPolicy } from '../rules/OverflowPolicy';
 import { ScorePolicy } from '../rules/ScorePolicy';
 import { ColorCard } from './ColorCard';
 import { Hand, HandAdditionStatus } from './Hand';
@@ -19,7 +19,7 @@ function createCard(red: number, green: number, blue: number): ColorCard {
 }
 
 describe('Hand', () => {
-  const endRound = OverflowPolicy.endRound();
+  const endRound = OverflowPolicy.classic();
   const scoring = new ScorePolicy(1000, 200);
 
   it('カード加算とバースト判定を自身のロジックとして行う', () => {
@@ -51,7 +51,7 @@ describe('Hand', () => {
   it('超過成分を255へ固定して続行し、スコア上限を下げる', () => {
     const addition = createHand(250, 255, 255).add(
       createCard(10, 0, 0),
-      OverflowPolicy.clampAndContinue(),
+      OverflowPolicy.clampAndContinue(1),
     );
     expect(addition.status).toBe(HandAdditionStatus.Added);
     expect(addition.hand.color).toMatchObject({
@@ -63,25 +63,57 @@ describe('Hand', () => {
     expect(scoring.calculate(addition.hand)).toBe(800);
   });
 
-  it('色成分ごとに異なる超過ルールを適用する', () => {
-    const policy = new OverflowPolicy({
-      red: OverflowBehavior.ClampAndContinue,
-      green: OverflowBehavior.EndRound,
-      blue: OverflowBehavior.ClampAndContinue,
-    });
-    const redOverflow = createHand(250, 10, 10).add(
+  it('許容色数までは固定して続行し、超えると累計色数でバーストする', () => {
+    const policy = OverflowPolicy.clampAndContinue(1);
+    const redOverflow = createHand(250, 250, 10).add(
       createCard(10, 0, 0),
       policy,
     );
     expect(redOverflow.status).toBe(HandAdditionStatus.Added);
     expect(redOverflow.hand.color.red).toBe(255);
 
-    const greenOverflow = createHand(10, 250, 10).add(
-      createCard(0, 10, 0),
-      policy,
-    );
+    const greenOverflow = redOverflow.hand.add(createCard(0, 10, 0), policy);
     expect(greenOverflow.status).toBe(HandAdditionStatus.Burst);
-    expect(greenOverflow.hand.color.green).toBe(260);
+    expect(greenOverflow.hand.clampedChannels).toEqual(
+      new Set([ColorChannel.Red, ColorChannel.Green]),
+    );
+  });
+
+  it('同じ色の再超過はバースト色数を増やさない', () => {
+    const policy = OverflowPolicy.clampAndContinue(1);
+    const first = createHand(250, 10, 10).add(createCard(10, 0, 0), policy);
+    const second = first.hand.add(createCard(10, 0, 0), policy);
+
+    expect(second.status).toBe(HandAdditionStatus.Added);
+    expect(second.hand.clampedChannels).toEqual(new Set([ColorChannel.Red]));
+  });
+
+  it('2色を許容すると3色目の超過で終了する', () => {
+    const policy = OverflowPolicy.clampAndContinue(2);
+    const first = createHand(250, 250, 250).add(createCard(10, 0, 0), policy);
+    const second = first.hand.add(createCard(0, 10, 0), policy);
+    const third = second.hand.add(createCard(0, 0, 10), policy);
+
+    expect(first.status).toBe(HandAdditionStatus.Added);
+    expect(second.status).toBe(HandAdditionStatus.Added);
+    expect(third.status).toBe(HandAdditionStatus.Burst);
+    expect(third.hand.clampedChannels.size).toBe(3);
+  });
+
+  it('1回の加算で許容数より多く超過すると終了する', () => {
+    const addition = createHand(250, 250, 10).add(
+      createCard(10, 10, 0),
+      OverflowPolicy.clampAndContinue(1),
+    );
+
+    expect(addition.status).toBe(HandAdditionStatus.Burst);
+    expect(addition.hand.clampedChannels.size).toBe(2);
+  });
+
+  it('許容バースト色数は0から2の整数に制限する', () => {
+    expect(() => new OverflowPolicy(-1)).toThrow(RangeError);
+    expect(() => new OverflowPolicy(1.5)).toThrow(RangeError);
+    expect(() => new OverflowPolicy(3)).toThrow(RangeError);
   });
 
   it('外部のSet変更からクランプ履歴を保護する', () => {

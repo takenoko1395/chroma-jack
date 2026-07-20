@@ -1,6 +1,10 @@
 import { Color } from '../models/color/Color';
 import type { GameState } from '../models/game/Game';
-import type { NormalRoundEndReason, RoundResult } from '../models/game/Round';
+import type {
+  BurstChannels,
+  NormalRoundEndReason,
+  RoundResult,
+} from '../models/game/Round';
 import { ColorCard, ColorCardCreationFailure } from '../models/hand/ColorCard';
 import { Hand, HandAdditionStatus } from '../models/hand/Hand';
 import type { ColorGenerationPolicy } from '../models/rules/ColorGenerationPolicy';
@@ -9,20 +13,19 @@ import type { IntegerRange } from '../models/shared/IntegerRange';
 import type { RandomGenerator } from '../repositories/RandomGenerator';
 
 // 注入されたルールと乱数生成器を固定し、ゲーム状態を遷移させる。
+// NOTE: Usecase(振る舞い)のため、状態遷移のみに責務を限定し、UIや永続化の責務は持たない。
+// 状態の保持はReactのHooksに委ねる設計。
 export class GameEngine {
   // 1ゲームで固定するルールと乱数生成器を受け取る。
   constructor(
     readonly rules: GameRules,
     private readonly random: RandomGenerator,
-  ) {}
+  ) { }
 
   // タイトル画面で使用する未開始状態を生成する。
   createInitialState(): GameState {
     return {
       phase: 'notStarted',
-      rulesId: this.rules.id,
-      rules: this.rules,
-      totalRounds: this.rules.totalRounds,
       currentRoundNumber: 0,
       currentHand: null,
       currentCard: null,
@@ -38,7 +41,6 @@ export class GameEngine {
 
   // 公開カードを手札へ加え、ルールに従って次状態へ進める。
   acceptCurrentCard(state: GameState): GameState {
-    this.assertRules(state);
     if (
       state.phase !== 'playing' ||
       state.currentHand === null ||
@@ -49,12 +51,20 @@ export class GameEngine {
 
     const addition = state.currentHand.add(
       state.currentCard,
-      this.rules.overflow,
+      this.rules.overflowPolicy,
     );
     if (addition.status === HandAdditionStatus.Burst) {
+      const [firstBurstChannel, ...otherBurstChannels] =
+        addition.hand.clampedChannels;
+      if (firstBurstChannel === undefined) {
+        throw new RangeError(
+          'A burst must contain at least one color channel.',
+        );
+      }
       return this.finishBurstRound(
         { ...state, currentCard: null },
         addition.hand,
+        [firstBurstChannel, ...otherBurstChannels],
       );
     }
     return this.revealNextCard({ ...state, currentHand: addition.hand });
@@ -62,22 +72,19 @@ export class GameEngine {
 
   // 公開カードを加えずに破棄し、次のカードへ進める。
   discardCurrentCard(state: GameState): GameState {
-    this.assertRules(state);
     if (state.phase !== 'playing' || state.currentCard === null) return state;
     return this.revealNextCard(state);
   }
 
   // 現在の手札を確定してラウンドを終了する。
   standCurrentRound(state: GameState): GameState {
-    this.assertRules(state);
     return this.finishRound(state, 'stood');
   }
 
   // 次ラウンドを開始し、最終ラウンド後はゲームを終了する。
   startNextRound(state: GameState): GameState {
-    this.assertRules(state);
     if (state.phase !== 'roundFinished') return state;
-    if (state.currentRoundNumber >= state.totalRounds) {
+    if (state.currentRoundNumber >= this.rules.totalRounds) {
       return { ...state, phase: 'gameFinished' };
     }
     return this.createRound(state, state.currentRoundNumber + 1);
@@ -86,15 +93,6 @@ export class GameEngine {
   // 同じルールを保持した未開始状態へ戻す。
   returnToTitle(): GameState {
     return this.createInitialState();
-  }
-
-  // 別ルールで生成された状態が途中から混入することを防ぐ。
-  private assertRules(state: GameState): void {
-    if (state.rules !== this.rules) {
-      throw new RangeError(
-        `Game state uses rules "${state.rulesId}", not this engine's rules.`,
-      );
-    }
   }
 
   // 生成Policyと乱数を使い、指定範囲内の色を生成する。
@@ -117,17 +115,17 @@ export class GameEngine {
 
   // カード生成Policyを使い、黒ではないカードを生成する。
   private generateCard(roundNumber: number, cardNumber: number): ColorCard {
-    const { cardColorRange, cardColorGeneration } = this.rules;
+    const { cardColorRange, cardColorGenerationPolicy } = this.rules;
     const id = `round-${roundNumber}-card-${cardNumber}`;
-    const red = cardColorGeneration.generateChannel(
+    const red = cardColorGenerationPolicy.generateChannel(
       cardColorRange,
       this.random,
     );
-    const green = cardColorGeneration.generateChannel(
+    const green = cardColorGenerationPolicy.generateChannel(
       cardColorRange,
       this.random,
     );
-    const blue = cardColorGeneration.generateChannel(
+    const blue = cardColorGenerationPolicy.generateChannel(
       cardColorRange,
       this.random,
     );
@@ -148,7 +146,7 @@ export class GameEngine {
     const currentHand = new Hand(
       this.generateColor(
         this.rules.initialColorRange,
-        this.rules.initialColorGeneration,
+        this.rules.initialColorGenerationPolicy,
       ),
     );
     const deck = Array.from({ length: this.rules.deckSize }, (_, index) =>
@@ -171,11 +169,11 @@ export class GameEngine {
   ): GameState {
     if (state.phase !== 'playing' || state.currentHand === null) return state;
     const result: RoundResult = {
-      rulesId: this.rules.id,
       roundNumber: state.currentRoundNumber,
       finalHand: state.currentHand,
       burstHand: null,
-      score: this.rules.scoring.calculate(state.currentHand),
+      burstChannels: null,
+      score: this.rules.scorePolicy.calculate(state.currentHand),
       endReason: reason,
     };
     return {
@@ -186,13 +184,17 @@ export class GameEngine {
   }
 
   // バースト直前と加算後の手札を保存して0点で確定する。
-  private finishBurstRound(state: GameState, burstHand: Hand): GameState {
+  private finishBurstRound(
+    state: GameState,
+    burstHand: Hand,
+    burstChannels: BurstChannels,
+  ): GameState {
     if (state.phase !== 'playing' || state.currentHand === null) return state;
     const result: RoundResult = {
-      rulesId: this.rules.id,
       roundNumber: state.currentRoundNumber,
       finalHand: state.currentHand,
       burstHand,
+      burstChannels,
       score: 0,
       endReason: 'burst',
     };

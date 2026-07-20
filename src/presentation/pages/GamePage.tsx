@@ -31,6 +31,10 @@ export function GamePage({
   const { t } = useTranslation();
   const result = game.roundResults.at(-1);
   const round = game.currentRound;
+  const displayedColor =
+    game.phase === 'roundFinished' && result?.endReason === 'burst'
+      ? result.burstHand.color
+      : round?.hand.color;
   const cardsRemaining =
     (round?.remainingDeck.length ?? 0) + (round?.offeredCards.length ?? 0);
 
@@ -43,7 +47,7 @@ export function GamePage({
         cardsRemaining={cardsRemaining}
       />
       <Stack sx={{ mt: 3 }}>
-        {round && <ColorPanel color={round.hand.color} />}
+        {displayedColor && <ColorPanel color={displayedColor} />}
         {game.phase === 'playing' && round?.revealsColorValues && (
           <ColorValueSummary
             color={round.hand.color}

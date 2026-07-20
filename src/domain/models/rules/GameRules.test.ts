@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { IntegerRange } from '../shared/IntegerRange';
 import { GameRules } from './GameRules';
+import { AddColorDeckMode } from './AddColorDeckMode';
 
 describe('GameRules', () => {
   it('オブジェクト引数から各設定を名前どおり保持する', () => {
@@ -33,6 +34,7 @@ describe('GameRules', () => {
           cardColorRange: blackOnlyRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+          addColorDeckMode: base.addColorDeckMode,
           cardTypeDistribution: base.cardTypeDistribution,
           overflowPolicy: base.overflowPolicy,
           scorePolicy: base.scorePolicy,
@@ -54,6 +56,29 @@ describe('GameRules', () => {
           cardColorRange: base.cardColorRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+          addColorDeckMode: base.addColorDeckMode,
+          cardTypeDistribution: base.cardTypeDistribution,
+          overflowPolicy: base.overflowPolicy,
+          scorePolicy: base.scorePolicy,
+        }),
+    ).toThrow(RangeError);
+  });
+
+  it('各色を主成分として同数にできない山札枚数を拒否する', () => {
+    const base = GameRules.classic();
+
+    expect(
+      () =>
+        new GameRules({
+          id: 'unbalanced-deck',
+          totalRounds: base.totalRounds,
+          deckSize: 10,
+          cardOfferSize: base.cardOfferSize,
+          initialColorRange: base.initialColorRange,
+          cardColorRange: base.cardColorRange,
+          initialColorGenerationPolicy: base.initialColorGenerationPolicy,
+          cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+          addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
           cardTypeDistribution: base.cardTypeDistribution,
           overflowPolicy: base.overflowPolicy,
           scorePolicy: base.scorePolicy,

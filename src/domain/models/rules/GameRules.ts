@@ -11,6 +11,7 @@ import {
   CardTypeDistribution,
   createCardTypeWeights,
 } from './CardTypeDistribution';
+import { AddColorDeckMode } from './AddColorDeckMode';
 
 // 固定値から検証済みのルール用整数範囲を生成する。
 function createRange(minimum: number, maximum: number): IntegerRange {
@@ -31,6 +32,7 @@ export type GameRulesArgs = Readonly<{
   cardColorRange: IntegerRange;
   initialColorGenerationPolicy: ColorGenerationPolicy;
   cardColorGenerationPolicy: ColorGenerationPolicy;
+  addColorDeckMode: AddColorDeckMode;
   cardTypeDistribution: CardTypeDistribution;
   overflowPolicy: OverflowPolicy;
   scorePolicy: ScorePolicy;
@@ -46,6 +48,7 @@ export class GameRules {
   readonly cardColorRange: IntegerRange;
   readonly initialColorGenerationPolicy: ColorGenerationPolicy;
   readonly cardColorGenerationPolicy: ColorGenerationPolicy;
+  readonly addColorDeckMode: AddColorDeckMode;
   readonly cardTypeDistribution: CardTypeDistribution;
   readonly overflowPolicy: OverflowPolicy;
   readonly scorePolicy: ScorePolicy;
@@ -84,6 +87,14 @@ export class GameRules {
         'Card colors must fit within the card limits and allow a non-black card.',
       );
     }
+    if (
+      args.addColorDeckMode === AddColorDeckMode.BalancedDominantChannel &&
+      args.deckSize % 3 !== 0
+    ) {
+      throw new RangeError(
+        'A balanced dominant-channel deck size must be divisible by three.',
+      );
+    }
 
     this.id = args.id;
     this.totalRounds = args.totalRounds;
@@ -93,6 +104,7 @@ export class GameRules {
     this.cardColorRange = args.cardColorRange;
     this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
     this.cardColorGenerationPolicy = args.cardColorGenerationPolicy;
+    this.addColorDeckMode = args.addColorDeckMode;
     this.cardTypeDistribution = args.cardTypeDistribution;
     this.overflowPolicy = args.overflowPolicy;
     this.scorePolicy = args.scorePolicy;
@@ -116,6 +128,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
+      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy(1000, 0),
@@ -140,6 +153,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Higher,
       ),
+      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.clampAndContinue(1),
       scorePolicy: new ScorePolicy(1000, 200),
@@ -164,6 +178,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
+      addColorDeckMode: AddColorDeckMode.RandomMixed,
       cardTypeDistribution: new CardTypeDistribution(
         createCardTypeWeights({
           addColor: 60,

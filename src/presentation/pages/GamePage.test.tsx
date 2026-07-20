@@ -8,6 +8,7 @@ import { GameRound } from '../../domain/models/game/GameRound';
 import { Hand } from '../../domain/models/hand/Hand';
 import { AppProviders } from '../providers/AppProviders';
 import { GamePage } from './GamePage';
+import type { RoundResult } from '../../domain/models/game/Round';
 
 // 継続可能なバースト後のプレイ状態を生成する。
 function createContinuedGame(revealsColorValues = false): GameState {
@@ -30,6 +31,50 @@ function createContinuedGame(revealsColorValues = false): GameState {
 }
 
 describe('GamePage', () => {
+  it('バースト後は大きな色面にも加算後の色を反映する', () => {
+    const beforeBurst = Color.create(250, 10, 10);
+    const afterBurst = Color.create(270, 10, 10);
+    if (!(beforeBurst instanceof Color) || !(afterBurst instanceof Color)) {
+      throw new RangeError('Invalid test colors.');
+    }
+    const result: RoundResult = {
+      roundNumber: 1,
+      finalHand: new Hand(beforeBurst),
+      burstHand: new Hand(afterBurst, new Set([ColorChannel.Red])),
+      burstChannels: [ColorChannel.Red],
+      score: 0,
+      endReason: 'burst',
+    };
+    const game: GameState = {
+      phase: 'roundFinished',
+      currentRound: new GameRound({
+        roundNumber: 1,
+        hand: new Hand(beforeBurst),
+        offeredCards: [],
+        remainingDeck: [],
+      }),
+      roundResults: [result],
+    };
+
+    render(
+      <AppProviders>
+        <GamePage
+          game={game}
+          totalRounds={5}
+          totalScore={0}
+          onAccept={vi.fn()}
+          onDiscard={vi.fn()}
+          onStand={vi.fn()}
+          onContinue={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole('img', { name: '現在の色' })).toHaveStyle({
+      backgroundColor: 'rgb(270, 10, 10)',
+    });
+  });
+
   it('継続可能なバースト後に累計バースト色数を表示する', () => {
     render(
       <AppProviders>

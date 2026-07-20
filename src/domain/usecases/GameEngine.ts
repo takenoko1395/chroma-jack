@@ -13,7 +13,7 @@ import {
 } from '../models/card/effects/RoundModifierEffects';
 import { SwapColorChannelsEffect } from '../models/card/effects/SwapColorChannelsEffect';
 import { Color } from '../models/color/Color';
-import { COLOR_CHANNELS } from '../models/color/ColorChannel';
+import { COLOR_CHANNELS, ColorChannel } from '../models/color/ColorChannel';
 import type { GameState } from '../models/game/Game';
 import { GameRound, GameRoundActionStatus } from '../models/game/GameRound';
 import type {
@@ -24,11 +24,24 @@ import type {
 import { Hand } from '../models/hand/Hand';
 import type { ColorGenerationPolicy } from '../models/rules/ColorGenerationPolicy';
 import type { GameRules } from '../models/rules/GameRules';
+import { AddColorDeckMode } from '../models/rules/AddColorDeckMode';
 import { IntegerRange } from '../models/shared/IntegerRange';
 import type { RandomGenerator } from '../repositories/RandomGenerator';
 
+// 内部生成用の整数範囲を検証済みValue Objectへ変換する。
+function createInternalRange(minimum: number, maximum: number): IntegerRange {
+  const range = IntegerRange.create(minimum, maximum);
+  if (!(range instanceof IntegerRange)) {
+    throw new RangeError(`Invalid internal range: ${range}`);
+  }
+  return range;
+}
+
 // 注入されたルールと乱数生成器を固定し、ゲーム全体の状態を遷移させる。
 export class GameEngine {
+  private static readonly DOMINANT_CHANNEL_RANGE = createInternalRange(40, 120);
+  private static readonly SUPPORT_CHANNEL_RANGE = createInternalRange(0, 20);
+
   // 1ゲームで固定するルールと乱数生成器を受け取る。
   constructor(
     readonly rules: GameRules,
@@ -159,6 +172,61 @@ export class GameEngine {
     );
   }
 
+  // 各色を主成分とするカードを同数含む混色カード山札を生成する。
+  private generateBalancedDominantChannelDeck(roundNumber: number): GameCard[] {
+    const cardsPerChannel = this.rules.deckSize / COLOR_CHANNELS.length;
+    const channels = COLOR_CHANNELS.flatMap((channel) =>
+      Array.from({ length: cardsPerChannel }, () => channel),
+    );
+    const deck = channels.map((channel, index) => {
+      return this.createDominantChannelCard({
+        id: `round-${roundNumber}-card-${index + 1}`,
+        channel,
+      });
+    });
+
+    // NOTE: 色ごとの枚数を維持したまま公開順だけをラウンドごとに変える。
+    for (let index = deck.length - 1; index > 0; index -= 1) {
+      const swapIndex = this.random.nextInteger(this.createRange(0, index));
+      [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
+    }
+    return deck;
+  }
+
+  // 指定成分を主成分とし、他成分には小さな揺らぎを持つ加算カードを生成する。
+  private createDominantChannelCard(args: {
+    id: string;
+    channel: ColorChannel;
+  }): GameCard {
+    const channels = {
+      red: this.random.nextInteger(
+        args.channel === ColorChannel.Red
+          ? GameEngine.DOMINANT_CHANNEL_RANGE
+          : GameEngine.SUPPORT_CHANNEL_RANGE,
+      ),
+      green: this.random.nextInteger(
+        args.channel === ColorChannel.Green
+          ? GameEngine.DOMINANT_CHANNEL_RANGE
+          : GameEngine.SUPPORT_CHANNEL_RANGE,
+      ),
+      blue: this.random.nextInteger(
+        args.channel === ColorChannel.Blue
+          ? GameEngine.DOMINANT_CHANNEL_RANGE
+          : GameEngine.SUPPORT_CHANNEL_RANGE,
+      ),
+    };
+    const card = GameCard.createAddColor(
+      args.id,
+      channels.red,
+      channels.green,
+      channels.blue,
+    );
+    if (!(card instanceof GameCard)) {
+      throw new RangeError(`Could not create dominant-channel card: ${card}`);
+    }
+    return card;
+  }
+
   // 選ばれた種類に応じ、固有値を持つ特殊効果を生成する。
   private generateSpecialCard(
     roundNumber: number,
@@ -212,11 +280,7 @@ export class GameEngine {
 
   // 内部生成用の整数範囲を検証済みValue Objectへ変換する。
   private createRange(minimum: number, maximum: number): IntegerRange {
-    const range = IntegerRange.create(minimum, maximum);
-    if (!(range instanceof IntegerRange)) {
-      throw new RangeError(`Invalid internal range: ${range}`);
-    }
-    return range;
+    return createInternalRange(minimum, maximum);
   }
 
   // 新しい初期Handと山札を生成して指定ラウンドを開始する。
@@ -227,9 +291,12 @@ export class GameEngine {
         this.rules.initialColorGenerationPolicy,
       ),
     );
-    const deck = Array.from({ length: this.rules.deckSize }, (_, index) =>
-      this.generateCard(roundNumber, index + 1),
-    );
+    const deck =
+      this.rules.addColorDeckMode === AddColorDeckMode.BalancedDominantChannel
+        ? this.generateBalancedDominantChannelDeck(roundNumber)
+        : Array.from({ length: this.rules.deckSize }, (_, index) =>
+            this.generateCard(roundNumber, index + 1),
+          );
     return {
       ...state,
       phase: 'playing',

@@ -8,6 +8,7 @@ import { GameRound } from '../models/game/GameRound';
 import { GameScore } from '../models/game/GameScore';
 import { Hand } from '../models/hand/Hand';
 import { GameRules } from '../models/rules/GameRules';
+import { AddColorDeckMode } from '../models/rules/AddColorDeckMode';
 import { IntegerRange } from '../models/shared/IntegerRange';
 import { GameEngine } from './GameEngine';
 
@@ -29,7 +30,7 @@ function createCard(
 }
 
 describe('game actions', () => {
-  it('範囲内の初期色と黒でない12枚のカードでラウンド1を始める', () => {
+  it('範囲内の初期色と各色が4枚ずつ主成分になる混色カードでラウンド1を始める', () => {
     const game = createEngine([0, 63, 127, 0]).startGame();
     const round = game.currentRound;
 
@@ -46,15 +47,23 @@ describe('game actions', () => {
       ...(round?.remainingDeck ?? []),
     ];
     expect(deck).toHaveLength(12);
+    const cardCounts = { red: 0, green: 0, blue: 0 };
     deck.forEach((card) => {
       expect(card.effect.kind).toBe(CardEffectKind.AddColor);
       if (card.effect.kind !== CardEffectKind.AddColor) return;
       const channels = Object.values(card.effect.amount);
-      expect(channels.every((channel) => channel >= 0 && channel <= 160)).toBe(
-        true,
+      const largestAmount = Math.max(...channels);
+      expect(largestAmount).toBeGreaterThanOrEqual(40);
+      expect(largestAmount).toBeLessThanOrEqual(120);
+      const supportAmounts = channels.filter(
+        (channel) => channel !== largestAmount,
       );
-      expect(channels.some((channel) => channel > 0)).toBe(true);
+      expect(supportAmounts.every((channel) => channel <= 20)).toBe(true);
+      if (card.effect.amount.red === largestAmount) cardCounts.red += 1;
+      if (card.effect.amount.green === largestAmount) cardCounts.green += 1;
+      if (card.effect.amount.blue === largestAmount) cardCounts.blue += 1;
     });
+    expect(cardCounts).toEqual({ red: 4, green: 4, blue: 4 });
   });
 
   it('加えると現在色を更新し、捨てると現在色を維持する', () => {
@@ -65,10 +74,16 @@ describe('game actions', () => {
     if (offeredCard === undefined) return;
 
     const accepted = engine.acceptOfferedCard(started, offeredCard.id);
-    expect(accepted.currentRound?.hand.color).toMatchObject({
-      red: 20,
-      green: 20,
-      blue: 20,
+    const acceptedColor = accepted.currentRound?.hand.color;
+    const initialColor = started.currentRound?.hand.color;
+    expect(acceptedColor).toBeDefined();
+    expect(initialColor).toBeDefined();
+    if (acceptedColor === undefined || initialColor === undefined) return;
+    if (offeredCard.effect.kind !== CardEffectKind.AddColor) return;
+    expect(acceptedColor).toMatchObject({
+      red: initialColor.red + offeredCard.effect.amount.red,
+      green: initialColor.green + offeredCard.effect.amount.green,
+      blue: initialColor.blue + offeredCard.effect.amount.blue,
     });
 
     const discarded = engine.discardOffer(accepted);
@@ -160,6 +175,7 @@ describe('game actions', () => {
       cardColorRange: base.cardColorRange,
       initialColorGenerationPolicy: base.initialColorGenerationPolicy,
       cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
       cardTypeDistribution: base.cardTypeDistribution,
       overflowPolicy: base.overflowPolicy,
       scorePolicy: base.scorePolicy,

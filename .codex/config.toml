@@ -1,0 +1,20 @@
+[agents.delivery_lead]
+description = "Orchestrates non-trivial repository tasks, selects review viewpoints, and synthesizes results."
+config_file = "agents/delivery-lead.toml"
+
+[agents.quality_reviewer]
+description = "Reviews code quality, regressions, architecture boundaries, error handling, tests, and maintainability."
+config_file = "agents/quality-reviewer.toml"
+
+[agents.security_reviewer]
+description = "Reviews authentication, authorization, API boundaries, external input, secrets, permissions, logging, and infrastructure risk."
+config_file = "agents/security-reviewer.toml"
+
+[agents.user_reviewer]
+description = "Reviews UI, UX, copy, user flows, and loading, empty, error, and retry states."
+config_file = "agents/user-reviewer.toml"
+
+[agents.ui_component_builder]
+description = "Implements complex UI from visual references using component-first decomposition and staged integration."
+config_file = "agents/ui-component-builder.toml"
+

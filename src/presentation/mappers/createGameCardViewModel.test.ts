@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GameCard } from '../../domain/models/card/GameCard';
-import { PreventBurstEffect } from '../../domain/models/card/effects/RoundModifierEffects';
 import { AdjustColorEffect } from '../../domain/models/card/effects/AdjustColorEffect';
+import { PreventBurstEffect } from '../../domain/models/card/effects/RoundModifierEffects';
 import { createGameCardViewModel } from './createGameCardViewModel';
 
 describe('createGameCardViewModel', () => {

@@ -186,7 +186,6 @@ export class GameRules {
           swapChannels: 10,
           adjustSaturation: 8,
           adjustBrightness: 8,
-          continueRound: 5,
           revealColorValues: 5,
           preventBurst: 1,
         }),

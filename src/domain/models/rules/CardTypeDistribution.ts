@@ -74,7 +74,6 @@ export function createCardTypeWeights(
       weights[CardEffectKind.AdjustSaturation] ?? 0,
     [CardEffectKind.AdjustBrightness]:
       weights[CardEffectKind.AdjustBrightness] ?? 0,
-    [CardEffectKind.ContinueRound]: weights[CardEffectKind.ContinueRound] ?? 0,
     [CardEffectKind.RevealColorValues]:
       weights[CardEffectKind.RevealColorValues] ?? 0,
     [CardEffectKind.PreventBurst]: weights[CardEffectKind.PreventBurst] ?? 0,

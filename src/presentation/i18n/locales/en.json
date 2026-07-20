@@ -17,7 +17,7 @@
     },
     "specialDeck": {
       "label": "Special Deck",
-      "description": "Choose from three cards including RGB adjustment, channel swap, saturation, brightness, offer preservation, value reveal, and burst prevention effects."
+      "description": "Choose from three cards including RGB adjustment, channel swap, saturation, brightness, value reveal, and burst prevention effects."
     },
     "custom": {
       "description": "Play with this rule's custom settings."
@@ -47,7 +47,6 @@
     "swapChannels": "Swap channels",
     "adjustSaturation": "Adjust saturation",
     "adjustBrightness": "Adjust brightness",
-    "continueRound": "Keep the other choices",
     "revealColorValues": "Reveal values",
     "preventBurst": "Prevent burst",
     "details": {

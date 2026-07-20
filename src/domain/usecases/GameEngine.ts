@@ -7,7 +7,6 @@ import {
   type CardEffect,
 } from '../models/card/effects/CardEffect';
 import {
-  ContinueRoundEffect,
   PreventBurstEffect,
   RevealColorValuesEffect,
 } from '../models/card/effects/RoundModifierEffects';
@@ -259,9 +258,6 @@ export class GameEngine {
         break;
       case CardEffectKind.AdjustBrightness:
         effect = new AdjustBrightnessEffect(direction * 32);
-        break;
-      case CardEffectKind.ContinueRound:
-        effect = new ContinueRoundEffect();
         break;
       case CardEffectKind.RevealColorValues:
         effect = new RevealColorValuesEffect();

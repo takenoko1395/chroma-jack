@@ -17,7 +17,7 @@
     },
     "specialDeck": {
       "label": "Special Deck",
-      "description": "RGB増減・成分交換・彩度・明度・候補維持・数値表示・バースト防止カードが混ざる3枚選択ルールです。"
+      "description": "RGB増減・成分交換・彩度・明度・数値表示・バースト防止カードが混ざる3枚選択ルールです。"
     },
     "custom": {
       "description": "このルール固有の設定でプレイします。"
@@ -47,7 +47,6 @@
     "swapChannels": "成分交換",
     "adjustSaturation": "彩度操作",
     "adjustBrightness": "明度操作",
-    "continueRound": "ほかの候補を残す",
     "revealColorValues": "数値表示",
     "preventBurst": "バースト防止",
     "details": {

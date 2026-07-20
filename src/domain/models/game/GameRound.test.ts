@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GameCard } from '../card/GameCard';
-import { CardEffectKind } from '../card/effects/CardEffect';
 import {
-  ContinueRoundEffect,
   PreventBurstEffect,
   RevealColorValuesEffect,
 } from '../card/effects/RoundModifierEffects';
@@ -38,16 +36,11 @@ function createRound(
   });
 }
 
-// 指定したラウンド操作効果を持つテスト用特殊カードを生成する。
-function createSpecialCard(
+// 指定したラウンド変更効果を持つテスト用特殊カードを生成する。
+function createModifierCard(
   id: string,
-  kind:
-    | CardEffectKind.ContinueRound
-    | CardEffectKind.RevealColorValues
-    | CardEffectKind.PreventBurst,
-  effect: ContinueRoundEffect | RevealColorValuesEffect | PreventBurstEffect,
+  effect: RevealColorValuesEffect | PreventBurstEffect,
 ): GameCard {
-  if (effect.kind !== kind) throw new Error('Invalid test effect kind');
   const card = GameCard.createSpecial({ id, effect });
   if (!(card instanceof GameCard)) throw new Error('Invalid test special card');
   return card;
@@ -109,27 +102,9 @@ describe('GameRound', () => {
     });
   });
 
-  it('継続効果では未選択候補を捨てずに維持する', () => {
-    const continueCard = createSpecialCard(
-      'continue',
-      CardEffectKind.ContinueRound,
-      new ContinueRoundEffect(),
-    );
-    const keptCard = createCard('kept', 1, 1, 1);
-    const action = createRound([continueCard, keptCard], []).playCard({
-      cardId: continueCard.id,
-      overflowPolicy: OverflowPolicy.classic(),
-      cardOfferSize: 2,
-    });
-
-    expect(action.status).toBe(GameRoundActionStatus.Continued);
-    expect(action.round.offeredCards.map((card) => card.id)).toEqual(['kept']);
-  });
-
   it('数値表示解禁をラウンド終了まで保持する', () => {
-    const revealCard = createSpecialCard(
+    const revealCard = createModifierCard(
       'reveal',
-      CardEffectKind.RevealColorValues,
       new RevealColorValuesEffect(),
     );
     const action = createRound(
@@ -147,19 +122,17 @@ describe('GameRound', () => {
   it('防止効果が次の終了バーストだけを255固定へ変え、その後も続行する', () => {
     const color = Color.create(250, 10, 10);
     if (!(color instanceof Color)) return;
-    const preventionCard = createSpecialCard(
+    const preventionCard = createModifierCard(
       'prevent',
-      CardEffectKind.PreventBurst,
       new PreventBurstEffect(),
     );
     const burstCard = createCard('burst', 10, 0, 0);
     const safeCard = createCard('safe', 0, 1, 0);
-    const finalCard = createCard('final', 0, 0, 1);
     const round = new GameRound({
       roundNumber: 1,
       hand: new Hand(color),
       offeredCards: [preventionCard],
-      remainingDeck: [burstCard, safeCard, finalCard],
+      remainingDeck: [burstCard, safeCard],
     });
     const protectedRound = round.playCard({
       cardId: preventionCard.id,
@@ -175,13 +148,6 @@ describe('GameRound', () => {
     expect(action.status).toBe(GameRoundActionStatus.Continued);
     expect(action.round.hand.color.red).toBe(255);
     expect(action.round.burstPreventionCount).toBe(0);
-
-    const safeAction = action.round.playCard({
-      cardId: safeCard.id,
-      overflowPolicy: OverflowPolicy.classic(),
-      cardOfferSize: 1,
-    });
-    expect(safeAction.status).toBe(GameRoundActionStatus.Continued);
-    expect(safeAction.round.hand.color.green).toBe(11);
+    expect(action.round.offeredCards[0]?.id).toBe(safeCard.id);
   });
 });

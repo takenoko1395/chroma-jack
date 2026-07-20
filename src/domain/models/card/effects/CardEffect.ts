@@ -5,7 +5,6 @@ import type { AdjustBrightnessEffect } from './AdjustBrightnessEffect';
 import type { AdjustColorEffect } from './AdjustColorEffect';
 import type { AdjustSaturationEffect } from './AdjustSaturationEffect';
 import type {
-  ContinueRoundEffect,
   PreventBurstEffect,
   RevealColorValuesEffect,
 } from './RoundModifierEffects';
@@ -23,8 +22,6 @@ export enum CardEffectKind {
   AdjustSaturation = 'adjustSaturation',
   // 明度を操作する効果。
   AdjustBrightness = 'adjustBrightness',
-  // 未選択候補を維持する効果。
-  ContinueRound = 'continueRound',
   // 現在ラウンドのRGB数値表示を解禁する効果。
   RevealColorValues = 'revealColorValues',
   // 次の終了バーストを1回防止する効果。
@@ -45,7 +42,6 @@ export type CardEffectResult = Readonly<{
   usedBurstPrevention: boolean;
   revealColorValues: boolean;
   grantBurstPrevention: boolean;
-  preserveUnselectedCards: boolean;
 }>;
 
 // すべてのカード効果が実装する実行契約。
@@ -61,7 +57,6 @@ export type CardEffect =
   | SwapColorChannelsEffect
   | AdjustSaturationEffect
   | AdjustBrightnessEffect
-  | ContinueRoundEffect
   | RevealColorValuesEffect
   | PreventBurstEffect;
 
@@ -77,6 +72,5 @@ export function createHandEffectResult(
     usedBurstPrevention,
     revealColorValues: false,
     grantBurstPrevention: false,
-    preserveUnselectedCards: false,
   };
 }

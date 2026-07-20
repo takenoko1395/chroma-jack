@@ -89,26 +89,6 @@ export class GameRound {
         burstHand: effect.burstHand,
       };
     }
-    if (effect.preserveUnselectedCards) {
-      const unselectedCards = this.offeredCards.filter(
-        (card) => card.id !== selectedCard.id,
-      );
-      if (unselectedCards.length > 0) {
-        return {
-          status: GameRoundActionStatus.Continued,
-          round: new GameRound({
-            roundNumber: this.roundNumber,
-            hand: effect.hand,
-            offeredCards: unselectedCards,
-            remainingDeck: this.remainingDeck,
-            revealsColorValues:
-              this.revealsColorValues || effect.revealColorValues,
-            burstPreventionCount: nextBurstPreventionCount,
-          }),
-          burstHand: null,
-        };
-      }
-    }
     return this.advanceOffer({
       hand: effect.hand,
       cardOfferSize: args.cardOfferSize,

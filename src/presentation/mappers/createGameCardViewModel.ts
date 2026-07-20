@@ -83,14 +83,6 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
         backgroundImage:
           'radial-gradient(circle at center, rgba(255,255,255,.7), transparent 55%)',
       };
-    case CardEffectKind.ContinueRound:
-      return {
-        id: card.id,
-        titleKey: 'cards.continueRound',
-        backgroundColor: '#0369a1',
-        backgroundImage:
-          'repeating-linear-gradient(90deg, transparent 0 18px, rgba(255,255,255,.18) 18px 21px)',
-      };
     case CardEffectKind.RevealColorValues:
       return {
         id: card.id,

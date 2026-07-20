@@ -2,11 +2,11 @@ import { useCallback, useRef, useState } from 'react';
 import { GameScore } from '../../domain/models/game/GameScore';
 import type { GameRules } from '../../domain/models/rules/GameRules';
 import { GameEngine } from '../../domain/usecases/GameEngine';
-import { BrowserRandomGenerator } from '../../gateway/repositories/BrowserRandomGenerator';
+import { BrowserRandomSource } from '../../gateway/repositories/BrowserRandomSource';
 
 // 注入されたルールとReactの画面状態をGameEngineへ接続する。
 export function useChromaJack(rules: GameRules) {
-  const engine = useRef(new GameEngine(rules, new BrowserRandomGenerator()));
+  const engine = useRef(new GameEngine(rules, new BrowserRandomSource()));
   const pendingRules = useRef(rules);
   pendingRules.current = rules;
   const [game, setGame] = useState(() => engine.current.createInitialState());
@@ -15,7 +15,7 @@ export function useChromaJack(rules: GameRules) {
     if (engine.current.rules !== pendingRules.current) {
       engine.current = new GameEngine(
         pendingRules.current,
-        new BrowserRandomGenerator(),
+        new BrowserRandomSource(),
       );
     }
     setGame(engine.current.startGame());

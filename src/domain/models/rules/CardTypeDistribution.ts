@@ -1,5 +1,5 @@
 import { CardEffectKind } from '../card/effects/CardEffect';
-import type { RandomGenerator } from '../../repositories/RandomGenerator';
+import type { RandomSource } from '../../repositories/RandomSource';
 import { IntegerRange } from '../shared/IntegerRange';
 
 // カード種類ごとの相対的な出現率を表す設定値。
@@ -41,7 +41,7 @@ export class CardTypeDistribution {
   }
 
   // ウェイトに従ってカード種類を1つ選択する。
-  choose(random: RandomGenerator): CardEffectKind {
+  choose(random: RandomSource): CardEffectKind {
     if (this.enabledKinds.length === 1)
       return this.enabledKinds[0] as CardEffectKind;
     const range = IntegerRange.create(1, this.totalWeight);

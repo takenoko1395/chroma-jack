@@ -25,7 +25,7 @@ import type { ColorGenerationPolicy } from '../models/rules/ColorGenerationPolic
 import type { GameRules } from '../models/rules/GameRules';
 import { AddColorDeckMode } from '../models/rules/AddColorDeckMode';
 import { IntegerRange } from '../models/shared/IntegerRange';
-import type { RandomGenerator } from '../repositories/RandomGenerator';
+import type { RandomSource } from '../repositories/RandomSource';
 
 // 内部生成用の整数範囲を検証済みValue Objectへ変換する。
 function createInternalRange(minimum: number, maximum: number): IntegerRange {
@@ -44,7 +44,7 @@ export class GameEngine {
   // 1ゲームで固定するルールと乱数生成器を受け取る。
   constructor(
     readonly rules: GameRules,
-    private readonly random: RandomGenerator,
+    private readonly random: RandomSource,
   ) {}
 
   // タイトル画面で使用する未開始状態を生成する。

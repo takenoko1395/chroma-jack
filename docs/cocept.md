@@ -591,13 +591,14 @@ src/
 │   │   │   └── Hand.ts
 │   │   └── rules/
 │   ├── repositories/
-│       └── RandomGenerator.ts
+│       └── RandomSource.ts
 │   └── usecases/
 │       └── GameEngine.ts
 │
 ├── infrastructure/
 │   └── random/
-│       └── BrowserRandomGenerator.ts
+│       ├── BrowserRandomSource.ts
+│       └── SeededRandomSource.ts
 │
 ├── presentation/
 │   ├── components/
@@ -618,7 +619,7 @@ src/
 │
 ├── test/
 │   └── helpers/
-│       └── FixedRandomGenerator.ts
+│       └── FixedRandomSource.ts
 │
 ├── main.tsx
 └── vite-env.d.ts
@@ -675,15 +676,17 @@ returnToTitle();
 
 ## 7.5 Infrastructure層
 
-乱数生成器を実装する。
+乱数供給源を実装する。
 
 ```ts
-export interface RandomGenerator {
-  nextInteger(min: number, max: number): number;
+export interface RandomSource {
+  nextInteger(range: IntegerRange): number;
 }
 ```
 
-`BrowserRandomGenerator`では `Math.random()` を使用してよい。
+通常プレイではブラウザの乱数を使う。デバッグや山札検証では、生成時に
+シードを受け取る決定的な実装へ差し替え、同じルールとシードから同じゲームを
+再現できるようにする。乱数の偏らせ方はGatewayへ持たせず、Domain側の生成Policyが決定する。
 
 テストでは固定値または事前に指定した値の列を返す実装を使う。
 
@@ -890,7 +893,7 @@ type GameRound = {
 
 ```ts
 const rules = GameRules.classic();
-const game = new GameEngine(rules, randomGenerator);
+const game = new GameEngine(rules, randomSource);
 ```
 
 初期色範囲、色生成傾向、RGB成分ごとの超過処理、クランプ時のスコア上限はPolicyとして差し替え可能にする。Domain Modelからグローバル設定を直接参照せず、1ゲーム中は開始時に注入された同じルールを使用する。

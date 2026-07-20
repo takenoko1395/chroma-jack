@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FixedRandomGenerator } from '../../../test/helpers/FixedRandomGenerator';
+import { FixedRandomSource } from '../../../test/helpers/FixedRandomSource';
 import { IntegerRange } from '../shared/IntegerRange';
 import {
   ColorGenerationPolicy,
@@ -18,11 +18,9 @@ describe('ColorGenerationPolicy', () => {
     const higher = new ColorGenerationPolicy(ColorGenerationTrend.Higher);
     const lower = new ColorGenerationPolicy(ColorGenerationTrend.Lower);
 
-    expect(
-      higher.generateChannel(range, new FixedRandomGenerator([2, 8])),
-    ).toBe(8);
-    expect(lower.generateChannel(range, new FixedRandomGenerator([2, 8]))).toBe(
-      2,
+    expect(higher.generateChannel(range, new FixedRandomSource([2, 8]))).toBe(
+      8,
     );
+    expect(lower.generateChannel(range, new FixedRandomSource([2, 8]))).toBe(2);
   });
 });

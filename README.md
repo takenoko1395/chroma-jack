@@ -56,7 +56,7 @@ npm run build
 - `src/domain/models/shared`: 検証済み整数範囲などの共有Value Object
 - `src/domain/repositories`: Domainが要求する外部依存のインターフェース
 - `src/domain/usecases`: 開始・加算・破棄・停止・次ラウンドのユースケース
-- `src/gateway/repositories`: ブラウザ乱数生成器
+- `src/gateway/repositories`: ブラウザ乱数とシード付き乱数の供給源
 - `src/gateway/api/generated`: 将来のAPI生成物の配置先（現在は通信機能なし）
 - `src/presentation/pages`: タイトル・ゲーム・最終結果画面
 - `src/presentation/providers`: MUIテーマとゲーム状態を接続するフック
@@ -67,7 +67,7 @@ npm run build
 - `src/presentation/router`: アプリケーション状態に基づく画面切り替え
 - `src/presentation/widgets`: 再利用可能な表示・操作部品
 
-ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameEngine`はゲーム開始時に注入された`GameRules`と乱数生成器を保持するため、ゲーム途中でルールが変わりません。初期色範囲、色生成傾向、通常カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
+ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameEngine`はゲーム開始時に注入された`GameRules`と`RandomSource`を保持するため、ゲーム途中でルールや乱数供給源が変わりません。通常プレイではブラウザ乱数を使い、デバッグや山札検証ではシード付き実装へ差し替えられます。初期色範囲、色生成傾向、通常カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
 
 ### ルールの差し替え
 

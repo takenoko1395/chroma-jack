@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FixedRandomGenerator } from '../../test/helpers/FixedRandomGenerator';
+import { FixedRandomSource } from '../../test/helpers/FixedRandomSource';
 import { GameCard } from '../models/card/GameCard';
 import { CardEffectKind } from '../models/card/effects/CardEffect';
 import { Color } from '../models/color/Color';
@@ -14,7 +14,7 @@ import { GameEngine } from './GameEngine';
 
 // 指定した乱数列でClassicルールのEngineを生成する。
 function createEngine(values: readonly number[]): GameEngine {
-  return new GameEngine(GameRules.classic(), new FixedRandomGenerator(values));
+  return new GameEngine(GameRules.classic(), new FixedRandomSource(values));
 }
 
 // テスト用の通常加算カードを生成する。
@@ -182,7 +182,7 @@ describe('game actions', () => {
     });
     const game = new GameEngine(
       rules,
-      new FixedRandomGenerator([127]),
+      new FixedRandomSource([127]),
     ).startGame();
 
     expect(game.currentRound?.hand.color).toMatchObject({
@@ -194,7 +194,7 @@ describe('game actions', () => {
 
   it('クランプルールでは超過後も次のカードへ進み、得点上限を下げる', () => {
     const rules = GameRules.clampChallenge();
-    const engine = new GameEngine(rules, new FixedRandomGenerator([1]));
+    const engine = new GameEngine(rules, new FixedRandomSource([1]));
     const color = Color.create(250, 255, 255);
     if (!(color instanceof Color)) return;
     const currentCard = createCard('current', 10, 0, 0);

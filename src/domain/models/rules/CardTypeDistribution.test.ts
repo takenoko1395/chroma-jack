@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FixedRandomGenerator } from '../../../test/helpers/FixedRandomGenerator';
+import { FixedRandomSource } from '../../../test/helpers/FixedRandomSource';
 import { CardEffectKind } from '../card/effects/CardEffect';
 import {
   CardTypeDistribution,
@@ -12,10 +12,10 @@ describe('CardTypeDistribution', () => {
       createCardTypeWeights({ addColor: 2, preventBurst: 1 }),
     );
 
-    expect(distribution.choose(new FixedRandomGenerator([1]))).toBe(
+    expect(distribution.choose(new FixedRandomSource([1]))).toBe(
       CardEffectKind.AddColor,
     );
-    expect(distribution.choose(new FixedRandomGenerator([3]))).toBe(
+    expect(distribution.choose(new FixedRandomSource([3]))).toBe(
       CardEffectKind.PreventBurst,
     );
   });

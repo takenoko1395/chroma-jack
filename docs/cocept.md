@@ -576,6 +576,9 @@ src/
 │   └── theme.ts
 │
 ├── domain/
+│   ├── factories/
+│   │   ├── GameDeckFactory.ts
+│   │   └── GameRoundFactory.ts
 │   ├── models/
 │   │   ├── card/
 │   │   │   ├── effects/
@@ -638,8 +641,13 @@ Domain層には以下を含める。
 - ラウンド
 - ゲーム
 
-色の加算とバースト判定は `Hand`、カード適用と候補進行は
-`GameRound`、ゲーム全体の遷移は `GameEngine` が担う。
+色の加算とバースト判定は `Hand`、カード適用と候補進行は `GameRound`、
+カードと山札の生成は `GameDeckFactory`、初期Handとラウンド開始状態の生成は
+`GameRoundFactory`、ゲーム全体の遷移は `GameEngine` が担う。
+
+`GameRules`は1ゲームを進行する`GameEngine`だけが保持する。Factoryは生成時の
+引数として同じルールを参照し、設定を複製して保持しない。`GameEngine`の公開APIは
+Factoryの構成を外部へ露出させない。
 
 ### 制約
 
@@ -888,6 +896,7 @@ type GameRound = {
 - UIコンポーネントを巨大化させない
 - マジックナンバーを定数化する
 - ゲームルールを`GameRules`へまとめ、ゲーム開始時に外から注入できるようにする
+- 山札とラウンド開始状態の生成をFactoryへ分離し、`GameEngine`は進行に専念する
 
 クラシックルールの例：
 

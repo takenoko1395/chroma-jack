@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { GameScore } from '../../domain/models/game/GameScore';
 import type { GameRules } from '../../domain/models/rules/GameRules';
 import { GameEngine } from '../../domain/usecases/GameEngine';
-import { BrowserRandomSource } from '../../gateway/repositories/BrowserRandomSource';
+import { BrowserRandomSource } from '../../gateway/random/BrowserRandomSource';
 
 // 注入されたルールとReactの画面状態をGameEngineへ接続する。
 export function useChromaJack(rules: GameRules) {

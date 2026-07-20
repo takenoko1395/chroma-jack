@@ -1,5 +1,5 @@
 import type { IntegerRange } from '../../domain/models/shared/IntegerRange';
-import type { RandomSource } from '../../domain/repositories/RandomSource';
+import type { RandomSource } from '../../domain/usecases/gateway/RandomSource';
 
 // 検証済みシードから再現可能な乱数列を供給するGateway。
 export class SeededRandomSource implements RandomSource {

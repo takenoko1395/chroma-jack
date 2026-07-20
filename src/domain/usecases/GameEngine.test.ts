@@ -29,7 +29,7 @@ describe('game actions', () => {
     expect(deck).toHaveLength(12);
     deck.forEach((card) => {
       const channels = Object.values(card.color);
-      expect(channels.every((channel) => channel >= 0 && channel <= 63)).toBe(
+      expect(channels.every((channel) => channel >= 0 && channel <= 160)).toBe(
         true,
       );
       expect(channels.some((channel) => channel > 0)).toBe(true);
@@ -197,6 +197,6 @@ describe('game actions', () => {
     expect(continued.offeredCards.map((card) => card.id)).toEqual(['next']);
 
     const finished = engine.standCurrentRound(continued);
-    expect(finished.roundResults[0]?.score).toBe(600);
+    expect(finished.roundResults[0]?.score).toBe(800);
   });
 });

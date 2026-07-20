@@ -28,9 +28,10 @@
     "currentColor": "現在の色",
     "offeredColors": "候補の色",
     "offeredColor": "候補 {{number}}",
+    "acceptOfferedColor": "候補 {{number}}を加える",
+    "offerInstruction": "色を選ぶとすぐに現在色へ加わります",
     "statusAnnouncement": "現在の色と候補の色を確認してください。ラウンド{{round}}、残り{{cards}}枚です",
     "continuedBurst": "{{count}}色バースト・上限の色で続行します",
-    "accept": "選んだ色を加える",
     "discard": "候補をすべて捨てる",
     "stand": "ここで止める"
   },

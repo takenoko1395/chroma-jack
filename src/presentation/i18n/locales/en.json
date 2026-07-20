@@ -28,9 +28,10 @@
     "currentColor": "Current color",
     "offeredColors": "Color choices",
     "offeredColor": "Choice {{number}}",
+    "acceptOfferedColor": "Add choice {{number}}",
+    "offerInstruction": "Choose a color to add it immediately",
     "statusAnnouncement": "Check the current color and color choices. Round {{round}}, {{cards}} cards remaining.",
     "continuedBurst": "{{count}} color burst · continuing at the limit",
-    "accept": "Add selected color",
     "discard": "Discard all choices",
     "stand": "Stand"
   },

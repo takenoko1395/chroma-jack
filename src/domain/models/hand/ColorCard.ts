@@ -19,7 +19,7 @@ export class ColorCard {
   private constructor(
     readonly id: string,
     readonly color: Color,
-  ) { }
+  ) {}
 
   // IDと色成分を検証し、カードまたは生成失敗理由を返す。
   static create(

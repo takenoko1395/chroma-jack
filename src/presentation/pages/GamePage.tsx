@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { GameState } from '../../domain/models/game/Game';
@@ -30,14 +29,6 @@ export function GamePage({
 }: GamePageProps) {
   const { t } = useTranslation();
   const result = game.roundResults.at(-1);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const activeSelectedCardId = game.offeredCards.some(
-    (card) => card.id === selectedCardId,
-  )
-    ? selectedCardId
-    : game.offeredCards.length === 1
-      ? (game.offeredCards[0]?.id ?? null)
-      : null;
   const cardsRemaining = game.remainingDeck.length + game.offeredCards.length;
 
   return (
@@ -51,11 +42,7 @@ export function GamePage({
       <Stack sx={{ mt: 3 }}>
         {game.currentHand && <ColorPanel color={game.currentHand.color} />}
         {game.phase === 'playing' && game.offeredCards.length > 0 && (
-          <CardOffer
-            cards={game.offeredCards}
-            selectedCardId={activeSelectedCardId}
-            onSelect={setSelectedCardId}
-          />
+          <CardOffer cards={game.offeredCards} onAccept={onAccept} />
         )}
       </Stack>
       <Typography
@@ -88,16 +75,7 @@ export function GamePage({
                 })}
               </Typography>
             )}
-            <ActionButtons
-              onAccept={() => {
-                if (activeSelectedCardId !== null) {
-                  onAccept(activeSelectedCardId);
-                }
-              }}
-              onDiscard={onDiscard}
-              onStand={onStand}
-              canAccept={activeSelectedCardId !== null}
-            />
+            <ActionButtons onDiscard={onDiscard} onStand={onStand} />
           </>
         )}
         {game.phase === 'roundFinished' && result && (

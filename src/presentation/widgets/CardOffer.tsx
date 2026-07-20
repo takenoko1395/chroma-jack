@@ -5,12 +5,11 @@ import { ColorCardView } from './ColorCardView';
 
 type CardOfferProps = {
   cards: readonly ColorCard[];
-  selectedCardId: string | null;
-  onSelect: (cardId: string) => void;
+  onAccept: (cardId: string) => void;
 };
 
 // 山札から同時に公開された候補色を、選択可能な一覧として表示する。
-export function CardOffer({ cards, selectedCardId, onSelect }: CardOfferProps) {
+export function CardOffer({ cards, onAccept }: CardOfferProps) {
   const { t } = useTranslation();
   return (
     <Box sx={{ mt: 3 }}>
@@ -20,6 +19,9 @@ export function CardOffer({ cards, selectedCardId, onSelect }: CardOfferProps) {
         sx={{ color: 'text.secondary', letterSpacing: '0.14em' }}
       >
         {t('game.offeredColors')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {t('game.offerInstruction')}
       </Typography>
       <Box
         sx={{
@@ -34,8 +36,8 @@ export function CardOffer({ cards, selectedCardId, onSelect }: CardOfferProps) {
             key={card.id}
             card={card}
             label={t('game.offeredColor', { number: index + 1 })}
-            selected={card.id === selectedCardId}
-            onSelect={() => onSelect(card.id)}
+            actionLabel={t('game.acceptOfferedColor', { number: index + 1 })}
+            onAccept={() => onAccept(card.id)}
           />
         ))}
       </Box>

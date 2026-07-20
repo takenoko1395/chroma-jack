@@ -35,7 +35,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Start game' }));
     expect(screen.getByLabelText('Current color')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Add selected color' }),
+      screen.getByRole('button', { name: 'Add choice 1' }),
     ).toBeInTheDocument();
   });
 
@@ -84,16 +84,18 @@ describe('App', () => {
     expect(rulesSelect).toHaveTextContent('Clamp Challenge');
   });
 
-  it('開始画面からゲームを始め、色面と3操作を表示する', async () => {
+  it('開始画面からゲームを始め、候補色と2操作を表示する', async () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
 
     expect(screen.getByLabelText('現在の色')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '候補 1' })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '選んだ色を加える' }),
-    ).toBeEnabled();
+      screen.getByRole('button', { name: '候補 1を加える' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '選んだ色を加える' }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: '候補をすべて捨てる' }),
     ).toBeInTheDocument();
@@ -115,17 +117,17 @@ describe('App', () => {
     await user.click(screen.getByRole('option', { name: 'Clamp Challenge' }));
     await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
 
-    const acceptButton = screen.getByRole('button', {
-      name: '選んだ色を加える',
-    });
-    expect(screen.getByRole('button', { name: '候補 1' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '候補 2' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '候補 3' })).toBeInTheDocument();
-    expect(acceptButton).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: '候補 1を加える' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '候補 2を加える' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '候補 3を加える' }),
+    ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '候補 2' }));
-    expect(acceptButton).toBeEnabled();
-    await user.click(acceptButton);
+    await user.click(screen.getByRole('button', { name: '候補 2を加える' }));
     expect(screen.getByText('21枚')).toBeInTheDocument();
   });
 

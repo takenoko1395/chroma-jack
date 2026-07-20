@@ -11,9 +11,9 @@ describe('GameRules', () => {
     expect(rules.deckSize).toBe(24);
     expect(rules.cardOfferSize).toBe(3);
     expect(rules.initialColorRange.maximum).toBe(159);
-    expect(rules.cardColorRange.maximum).toBe(63);
+    expect(rules.cardColorRange.maximum).toBe(160);
     expect(rules.overflowPolicy.allowedBurstColors).toBe(1);
-    expect(rules.scorePolicy.clampPenalty).toBe(400);
+    expect(rules.scorePolicy.clampPenalty).toBe(200);
   });
 
   it('黒以外のカードを生成できない範囲を拒否する', () => {

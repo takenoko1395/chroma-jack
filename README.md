@@ -31,6 +31,18 @@ npm run format:check
 npm run build
 ```
 
+## GitHub Pagesへの公開
+
+`.github/workflows/deploy-pages.yml` がPull Requestで品質チェックを実行し、`main`へのpushまたは手動実行でビルド結果をGitHub Pagesへ公開します。Pagesが返すベースパスをViteへ渡すため、リポジトリ配下のURLとカスタムドメインのどちらでもアセットの参照先が自動調整されます。
+
+初回のみ、GitHubのリポジトリ画面で次の設定を行ってください。
+
+1. `Settings` → `Pages` を開く
+2. `Build and deployment` の `Source` を `GitHub Actions` にする
+3. `main`へマージするか、`Actions`から`Test and deploy GitHub Pages`を手動実行する
+
+公開URLはWorkflowの`deploy`ジョブと、リポジトリの`Settings` → `Pages`に表示されます。
+
 ## アーキテクチャ
 
 依存方向を表示からルール側へ向けた、小規模なレイヤー構成です。

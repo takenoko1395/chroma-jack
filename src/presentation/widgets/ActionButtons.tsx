@@ -1,4 +1,5 @@
 import { Button, Stack } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 type ActionButtonsProps = {
   onAccept: () => void;
@@ -12,6 +13,7 @@ export function ActionButtons({
   onDiscard,
   onStand,
 }: ActionButtonsProps) {
+  const { t } = useTranslation();
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 3 }}>
       <Button
@@ -20,7 +22,7 @@ export function ActionButtons({
         onClick={onAccept}
         sx={{ flex: 1 }}
       >
-        加える
+        {t('game.accept')}
       </Button>
       <Button
         variant="outlined"
@@ -28,10 +30,10 @@ export function ActionButtons({
         onClick={onDiscard}
         sx={{ flex: 1 }}
       >
-        捨てる
+        {t('game.discard')}
       </Button>
       <Button variant="text" size="large" onClick={onStand} sx={{ flex: 1 }}>
-        ここで止める
+        {t('game.stand')}
       </Button>
     </Stack>
   );

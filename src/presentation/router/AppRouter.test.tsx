@@ -14,6 +14,29 @@ function renderApp() {
 }
 
 describe('App', () => {
+  it('表示言語を英語へ切り替える', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    const languageSelect = screen.getByRole('combobox', {
+      name: '表示言語',
+    });
+    await user.click(languageSelect);
+    await user.click(screen.getByRole('option', { name: 'English' }));
+
+    expect(
+      screen.getByRole('button', { name: 'Start game' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: 'Game rules' }),
+    ).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe('en');
+
+    await user.click(screen.getByRole('button', { name: 'Start game' }));
+    expect(screen.getByLabelText('Current color')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+  });
+
   it('Classicを初期選択し、開始前にClamp Challengeへ変更できる', async () => {
     const user = userEvent.setup();
     renderApp();

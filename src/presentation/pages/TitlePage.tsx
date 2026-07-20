@@ -11,21 +11,15 @@ import {
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import type { GameRules } from '../../domain/models/rules/GameRules';
+import { useTranslation } from 'react-i18next';
+import type { SelectableGameRule } from '../rules/SelectableGameRule';
 
 type TitlePageProps = {
-  ruleOptions: readonly GameRules[];
+  ruleOptions: readonly SelectableGameRule[];
   selectedRulesId: string;
   onSelectRules: (rulesId: string) => void;
   onStart: () => void;
 };
-
-// プリセットの識別子をコンボボックス用の表示名へ変換する。
-function getRulesLabel(rules: GameRules): string {
-  if (rules.id === 'classic') return 'Classic';
-  if (rules.id === 'clamp-challenge') return 'Clamp Challenge';
-  return rules.id;
-}
 
 // ゲーム概要と開始操作を提示するタイトル画面。
 export function TitlePage({
@@ -34,13 +28,24 @@ export function TitlePage({
   onSelectRules,
   onStart,
 }: TitlePageProps) {
+  const { t, i18n } = useTranslation();
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const selectedRules =
-    ruleOptions.find((rules) => rules.id === selectedRulesId) ?? ruleOptions[0];
+  const selectedRule =
+    ruleOptions.find((option) => option.rules.id === selectedRulesId) ??
+    ruleOptions[0];
+  if (selectedRule === undefined) {
+    throw new RangeError('At least one selectable game rule is required.');
+  }
+  const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'ja';
 
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
+
+  // 選択中の言語を文書全体の言語属性にも反映する。
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   return (
     <Container maxWidth="md">
@@ -92,45 +97,61 @@ export function TitlePage({
             lineHeight: 1.9,
           }}
         >
-          色を重ねて、白に近づけよう。
+          {t('title.tagline')}
           <br />
-          {selectedRules?.overflowPolicy.allowedBurstColors === 0
-            ? 'ただし、加えすぎるとバースト。'
-            : `${selectedRules?.overflowPolicy.allowedBurstColors ?? 0}色までバーストしても上限で止まり、次の色のバーストでラウンド終了。`}
-          {selectedRules?.id === 'clamp-challenge' && (
-            <>
-              <br />
-              初期色とカードは明るめに出やすく、バーストした色があると得点上限が下がります。
-            </>
-          )}
+          {t(selectedRule.descriptionKey, {
+            defaultValue: t('rules.custom.description'),
+          })}
           <br />
-          数字ではなく、色だけを信じてください。
+          {t('title.trust')}
         </Typography>
-        <FormControl sx={{ mt: 4, minWidth: { xs: '100%', sm: 280 } }}>
-          <InputLabel id="game-rules-label">ゲームルール</InputLabel>
-          <Select
-            labelId="game-rules-label"
-            value={selectedRulesId}
-            label="ゲームルール"
-            inputProps={{ 'aria-describedby': 'game-rules-description' }}
-            onChange={(event: SelectChangeEvent) =>
-              onSelectRules(event.target.value)
-            }
-          >
-            {ruleOptions.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {getRulesLabel(option)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          sx={{ mt: 4, width: { xs: '100%', sm: 'auto' } }}
+        >
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 280 } }}>
+            <InputLabel id="game-rules-label">
+              {t('title.rulesLabel')}
+            </InputLabel>
+            <Select
+              labelId="game-rules-label"
+              value={selectedRulesId}
+              label={t('title.rulesLabel')}
+              inputProps={{ 'aria-describedby': 'game-rules-description' }}
+              onChange={(event: SelectChangeEvent) =>
+                onSelectRules(event.target.value)
+              }
+            >
+              {ruleOptions.map((option) => (
+                <MenuItem key={option.rules.id} value={option.rules.id}>
+                  {t(option.labelKey, { defaultValue: option.rules.id })}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+            <InputLabel id="language-label">{t('language.label')}</InputLabel>
+            <Select
+              labelId="language-label"
+              value={language}
+              label={t('language.label')}
+              onChange={(event: SelectChangeEvent) => {
+                void i18n.changeLanguage(event.target.value);
+              }}
+            >
+              <MenuItem value="ja">{t('language.ja')}</MenuItem>
+              <MenuItem value="en">{t('language.en')}</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
         <Button
           variant="contained"
           size="large"
           onClick={onStart}
           sx={{ mt: 3, minWidth: 210 }}
         >
-          ゲームを始める
+          {t('title.start')}
         </Button>
       </Stack>
     </Container>

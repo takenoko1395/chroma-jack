@@ -7,6 +7,7 @@
 - React / TypeScript
 - Vite
 - MUI（Material UI）
+- i18next / react-i18next
 - Vitest / React Testing Library
 - ESLint / Prettier
 
@@ -45,6 +46,8 @@ npm run build
 - `src/gateway/api/generated`: 将来のAPI生成物の配置先（現在は通信機能なし）
 - `src/presentation/pages`: タイトル・ゲーム・最終結果画面
 - `src/presentation/providers`: MUIテーマとゲーム状態を接続するフック
+- `src/presentation/i18n`: JSON辞書と日本語・英語の表示切り替え
+- `src/presentation/rules`: ルール本体と表示用翻訳キーの関連付け
 - `src/presentation/router`: アプリケーション状態に基づく画面切り替え
 - `src/presentation/widgets`: 再利用可能な表示・操作部品
 
@@ -67,6 +70,7 @@ npm run build
 - 色成分の上限超過によるバースト
 - 外部注入できるゲームルールと、許容色数まで255固定で続行するチャレンジルール
 - ゲーム開始前のルール選択と、続行可能なバースト色数のプレイ中表示
+- JSON辞書を使った日本語・英語表示の切り替え
 - 白への距離に基づくラウンドスコアと最終スコア
 - ラウンド結果、全ラウンドのスコア一覧
 - もう一度遊ぶ、タイトルへ戻る操作

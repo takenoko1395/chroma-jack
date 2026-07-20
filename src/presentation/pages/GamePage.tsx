@@ -1,4 +1,5 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { GameState } from '../../domain/models/game/Game';
 import { ActionButtons } from '../widgets/ActionButtons';
 import { ColorCardView } from '../widgets/ColorCardView';
@@ -26,6 +27,7 @@ export function GamePage({
   onStand,
   onContinue,
 }: GamePageProps) {
+  const { t } = useTranslation();
   const result = game.roundResults.at(-1);
 
   return (
@@ -61,7 +63,10 @@ export function GamePage({
         }}
       >
         {game.phase === 'playing'
-          ? `現在の色と次の色を確認してください。ラウンド${game.currentRoundNumber}、残り${game.remainingDeck.length + (game.currentCard ? 1 : 0)}枚です`
+          ? t('game.statusAnnouncement', {
+              round: game.currentRoundNumber,
+              cards: game.remainingDeck.length + (game.currentCard ? 1 : 0),
+            })
           : ''}
       </Typography>
       <Box>
@@ -69,8 +74,9 @@ export function GamePage({
           <>
             {game.currentHand && game.currentHand.clampedChannels.size > 0 && (
               <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
-                {game.currentHand.clampedChannels.size}
-                色バースト・上限の色で続行します
+                {t('game.continuedBurst', {
+                  count: game.currentHand.clampedChannels.size,
+                })}
               </Typography>
             )}
             <ActionButtons

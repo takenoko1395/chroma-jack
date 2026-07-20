@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { ColorCard } from '../../domain/models/hand/ColorCard';
 
 type ColorCardViewProps = {
@@ -7,6 +8,7 @@ type ColorCardViewProps = {
 
 // 現在公開されている色カードを数値なしの色面として表示する。
 export function ColorCardView({ card }: ColorCardViewProps) {
+  const { t } = useTranslation();
   const { red, green, blue } = card.color;
   return (
     <Box sx={{ flex: 1, minWidth: 0, maxWidth: 320 }}>
@@ -15,11 +17,11 @@ export function ColorCardView({ card }: ColorCardViewProps) {
         variant="overline"
         sx={{ color: 'text.secondary', letterSpacing: '0.14em' }}
       >
-        次の色
+        {t('game.nextColor')}
       </Typography>
       <Box
         role="img"
-        aria-label="次に引いた色"
+        aria-label={t('game.nextDrawnColor')}
         sx={{
           mt: 0.5,
           width: '100%',

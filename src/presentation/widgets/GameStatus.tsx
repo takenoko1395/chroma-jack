@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 type GameStatusProps = {
   currentRound: number;
@@ -15,6 +16,7 @@ export function GameStatus({
   totalScore,
   cardsRemaining,
 }: GameStatusProps) {
+  const { t, i18n } = useTranslation();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function GameStatus({
     >
       <Box>
         <Typography variant="overline" color="text.secondary">
-          ラウンド
+          {t('game.round')}
         </Typography>
         <Typography
           ref={headingRef}
@@ -46,17 +48,21 @@ export function GameStatus({
       <Stack direction="row" spacing={{ xs: 2.5, sm: 5 }} textAlign="right">
         <Box>
           <Typography variant="overline" color="text.secondary">
-            合計
+            {t('game.total')}
           </Typography>
           <Typography fontWeight={700}>
-            {totalScore.toLocaleString()}点
+            {t('game.points', {
+              value: totalScore.toLocaleString(i18n.language),
+            })}
           </Typography>
         </Box>
         <Box>
           <Typography variant="overline" color="text.secondary">
-            残り
+            {t('game.remaining')}
           </Typography>
-          <Typography fontWeight={700}>{cardsRemaining}枚</Typography>
+          <Typography fontWeight={700}>
+            {t('game.cards', { count: cardsRemaining })}
+          </Typography>
         </Box>
       </Stack>
     </Stack>

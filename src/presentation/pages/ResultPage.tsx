@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { RoundResult } from '../../domain/models/game/Round';
 import { ScoreList } from '../widgets/ScoreList';
 
@@ -21,6 +22,7 @@ export function ResultPage({
   onReplay,
   onTitle,
 }: ResultPageProps) {
+  const { t, i18n } = useTranslation();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export function ResultPage({
         color="text.secondary"
         sx={{ letterSpacing: '0.18em' }}
       >
-        {totalRounds} colors complete
+        {t('finalResult.complete', { count: totalRounds })}
       </Typography>
       <Typography
         ref={headingRef}
@@ -43,12 +45,12 @@ export function ResultPage({
         variant="h2"
         sx={{ mt: 1 }}
       >
-        ゲーム終了
+        {t('finalResult.heading')}
       </Typography>
       <Box
         sx={{ my: 4, py: 4, borderBlock: '1px solid', borderColor: 'divider' }}
       >
-        <Typography color="text.secondary">最終スコア</Typography>
+        <Typography color="text.secondary">{t('finalResult.score')}</Typography>
         <Typography
           component="p"
           sx={{
@@ -58,12 +60,15 @@ export function ResultPage({
             letterSpacing: '-.04em',
           }}
         >
-          {totalScore.toLocaleString()}
+          {totalScore.toLocaleString(i18n.language)}
           <Typography
             component="span"
             sx={{ ml: 1, fontSize: 18, color: 'text.secondary' }}
           >
-            / {maximumScore.toLocaleString()}点
+            /{' '}
+            {t('game.points', {
+              value: maximumScore.toLocaleString(i18n.language),
+            })}
           </Typography>
         </Typography>
       </Box>
@@ -79,7 +84,7 @@ export function ResultPage({
           onClick={onReplay}
           sx={{ flex: 1 }}
         >
-          もう一度遊ぶ
+          {t('finalResult.replay')}
         </Button>
         <Button
           variant="outlined"
@@ -87,7 +92,7 @@ export function ResultPage({
           onClick={onTitle}
           sx={{ flex: 1 }}
         >
-          タイトルへ戻る
+          {t('finalResult.title')}
         </Button>
       </Stack>
     </Container>

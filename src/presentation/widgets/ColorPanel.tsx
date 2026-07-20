@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { Color } from '../../domain/models/color/Color';
 
 type ColorPanelProps = {
@@ -12,6 +13,7 @@ function toCssColor(color: Color): string {
 
 // プレイヤーが現在保持している色を最も大きな色面として表示する。
 export function ColorPanel({ color }: ColorPanelProps) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ flex: 1.65, minWidth: 0 }}>
       <Typography
@@ -19,11 +21,11 @@ export function ColorPanel({ color }: ColorPanelProps) {
         variant="overline"
         sx={{ color: 'text.secondary', letterSpacing: '0.14em' }}
       >
-        現在の色
+        {t('game.currentColor')}
       </Typography>
       <Box
         role="img"
-        aria-label="現在の色"
+        aria-label={t('game.currentColor')}
         sx={{
           mt: 0.5,
           width: '100%',

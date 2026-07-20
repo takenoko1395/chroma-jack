@@ -20,7 +20,7 @@ export class GameEngine {
   constructor(
     readonly rules: GameRules,
     private readonly random: RandomGenerator,
-  ) { }
+  ) {}
 
   // タイトル画面で使用する未開始状態を生成する。
   createInitialState(): GameState {

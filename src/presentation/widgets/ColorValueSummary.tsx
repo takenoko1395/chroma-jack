@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { Color } from '../../domain/models/color/Color';
 
 type ColorValueSummaryProps = {
@@ -14,6 +15,7 @@ const CHANNELS = [
 
 // ラウンド終了後に限り、振り返り用のRGB値を表示する。
 export function ColorValueSummary({ color, label }: ColorValueSummaryProps) {
+  const { t } = useTranslation();
   return (
     <Box sx={{ mt: 2.5 }}>
       <Typography variant="caption" color="text.secondary">
@@ -22,7 +24,7 @@ export function ColorValueSummary({ color, label }: ColorValueSummaryProps) {
       <Stack
         direction="row"
         spacing={1}
-        aria-label={`${label}の数値`}
+        aria-label={t('roundResult.colorValues', { label })}
         sx={{ mt: 0.75 }}
       >
         {CHANNELS.map((channel) => (

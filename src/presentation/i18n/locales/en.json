@@ -1,0 +1,59 @@
+{
+  "language": { "label": "Language", "ja": "日本語", "en": "English" },
+  "title": {
+    "tagline": "Layer colors and move closer to white.",
+    "trust": "Trust the colors, not the numbers.",
+    "rulesLabel": "Game rules",
+    "start": "Start game"
+  },
+  "rules": {
+    "classic": {
+      "label": "Classic",
+      "description": "The round ends as soon as any color channel bursts."
+    },
+    "clampChallenge": {
+      "label": "Clamp Challenge",
+      "description": "Continue after one color bursts; the next new burst ends the round. Initial colors and cards tend to be brighter, and bursting lowers the score ceiling."
+    },
+    "custom": {
+      "description": "Play with this rule's custom settings."
+    }
+  },
+  "game": {
+    "round": "Round",
+    "total": "Total",
+    "remaining": "Remaining",
+    "points": "{{value}} pts",
+    "cards": "{{count}} cards",
+    "currentColor": "Current color",
+    "nextColor": "Next color",
+    "nextDrawnColor": "Next drawn color",
+    "statusAnnouncement": "Check the current and next colors. Round {{round}}, {{cards}} cards remaining.",
+    "continuedBurst": "{{count}} color burst · continuing at the limit",
+    "accept": "Add",
+    "discard": "Discard",
+    "stand": "Stand"
+  },
+  "roundResult": {
+    "finished": "Round complete",
+    "burst": "Burst",
+    "burstCount": "{{count}} color burst",
+    "burstDetail": "{{count}} color channels exceeded the limit",
+    "deckExhausted": "The deck is empty",
+    "stood": "Color locked in",
+    "burstColor": "Color after the bursting addition",
+    "finalColor": "Final color",
+    "colorValues": "Numeric values for {{label}}",
+    "viewResults": "View results",
+    "nextRound": "Next round"
+  },
+  "finalResult": {
+    "complete": "{{count}} colors complete",
+    "heading": "Game complete",
+    "score": "Final score",
+    "scoreList": "Scores by round",
+    "round": "Round {{number}}",
+    "replay": "Play again",
+    "title": "Back to title"
+  }
+}

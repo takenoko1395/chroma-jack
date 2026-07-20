@@ -1,6 +1,5 @@
 import type { GameCard } from '../card/GameCard';
 import type { Hand } from '../hand/Hand';
-import { HandAdditionStatus } from '../hand/Hand';
 import type { OverflowPolicy } from '../rules/OverflowPolicy';
 
 // GameRoundへカードまたは破棄操作を適用した後の進行状態を示す。
@@ -28,6 +27,8 @@ export class GameRound {
   readonly hand: Hand;
   readonly offeredCards: readonly GameCard[];
   readonly remainingDeck: readonly GameCard[];
+  readonly revealsColorValues: boolean;
+  readonly burstPreventionCount: number;
 
   // ある時点のラウンド進行に必要な状態を保持する。
   constructor(args: {
@@ -35,11 +36,15 @@ export class GameRound {
     hand: Hand;
     offeredCards: readonly GameCard[];
     remainingDeck: readonly GameCard[];
+    revealsColorValues?: boolean;
+    burstPreventionCount?: number;
   }) {
     this.roundNumber = args.roundNumber;
     this.hand = args.hand;
     this.offeredCards = args.offeredCards;
     this.remainingDeck = args.remainingDeck;
+    this.revealsColorValues = args.revealsColorValues ?? false;
+    this.burstPreventionCount = args.burstPreventionCount ?? 0;
   }
 
   // 公開候補のカード効果をHandへ適用し、未選択候補を破棄して次へ進める。
@@ -60,8 +65,16 @@ export class GameRound {
     }
 
     // 手札にカードを加えた時の挙動は hand と overflowPolicy に委譲する。
-    const addition = selectedCard.applyTo(this.hand, args.overflowPolicy);
-    if (addition.status === HandAdditionStatus.Burst) {
+    const effect = selectedCard.applyTo({
+      hand: this.hand,
+      overflowPolicy: args.overflowPolicy,
+      canPreventBurst: this.burstPreventionCount > 0,
+    });
+    const nextBurstPreventionCount =
+      this.burstPreventionCount -
+      (effect.usedBurstPrevention ? 1 : 0) +
+      (effect.grantBurstPrevention ? 1 : 0);
+    if (effect.burstHand !== null) {
       return {
         status: GameRoundActionStatus.Burst,
         round: new GameRound({
@@ -69,28 +82,68 @@ export class GameRound {
           hand: this.hand,
           offeredCards: [],
           remainingDeck: this.remainingDeck,
+          revealsColorValues:
+            this.revealsColorValues || effect.revealColorValues,
+          burstPreventionCount: nextBurstPreventionCount,
         }),
-        burstHand: addition.hand,
+        burstHand: effect.burstHand,
       };
     }
-    return this.advanceOffer(addition.hand, args.cardOfferSize);
+    if (effect.preserveUnselectedCards) {
+      const unselectedCards = this.offeredCards.filter(
+        (card) => card.id !== selectedCard.id,
+      );
+      if (unselectedCards.length > 0) {
+        return {
+          status: GameRoundActionStatus.Continued,
+          round: new GameRound({
+            roundNumber: this.roundNumber,
+            hand: effect.hand,
+            offeredCards: unselectedCards,
+            remainingDeck: this.remainingDeck,
+            revealsColorValues:
+              this.revealsColorValues || effect.revealColorValues,
+            burstPreventionCount: nextBurstPreventionCount,
+          }),
+          burstHand: null,
+        };
+      }
+    }
+    return this.advanceOffer({
+      hand: effect.hand,
+      cardOfferSize: args.cardOfferSize,
+      revealsColorValues: this.revealsColorValues || effect.revealColorValues,
+      burstPreventionCount: nextBurstPreventionCount,
+    });
   }
 
   // 現在の公開候補をすべて破棄し、Handを変えずに次へ進める。
   discardOffer(cardOfferSize: number): GameRoundAction {
-    return this.advanceOffer(this.hand, cardOfferSize);
+    return this.advanceOffer({
+      hand: this.hand,
+      cardOfferSize,
+      revealsColorValues: this.revealsColorValues,
+      burstPreventionCount: this.burstPreventionCount,
+    });
   }
 
   // 指定したHandを保持して次候補を公開し、山札が空なら終了を返す。
-  private advanceOffer(hand: Hand, cardOfferSize: number): GameRoundAction {
+  private advanceOffer(args: {
+    hand: Hand;
+    cardOfferSize: number;
+    revealsColorValues: boolean;
+    burstPreventionCount: number;
+  }): GameRoundAction {
     if (this.remainingDeck.length === 0) {
       return {
         status: GameRoundActionStatus.DeckExhausted,
         round: new GameRound({
           roundNumber: this.roundNumber,
-          hand,
+          hand: args.hand,
           offeredCards: [],
           remainingDeck: [],
+          revealsColorValues: args.revealsColorValues,
+          burstPreventionCount: args.burstPreventionCount,
         }),
         burstHand: null,
       };
@@ -99,9 +152,11 @@ export class GameRound {
       status: GameRoundActionStatus.Continued,
       round: new GameRound({
         roundNumber: this.roundNumber,
-        hand,
-        offeredCards: this.remainingDeck.slice(0, cardOfferSize),
-        remainingDeck: this.remainingDeck.slice(cardOfferSize),
+        hand: args.hand,
+        offeredCards: this.remainingDeck.slice(0, args.cardOfferSize),
+        remainingDeck: this.remainingDeck.slice(args.cardOfferSize),
+        revealsColorValues: args.revealsColorValues,
+        burstPreventionCount: args.burstPreventionCount,
       }),
       burstHand: null,
     };

@@ -11,6 +11,7 @@ export type SelectableGameRule = Readonly<{
 export function createBuiltInRuleOptions(args: {
   classic: GameRules;
   clampChallenge: GameRules;
+  specialDeck: GameRules;
 }): readonly SelectableGameRule[] {
   return [
     {
@@ -22,6 +23,11 @@ export function createBuiltInRuleOptions(args: {
       rules: args.clampChallenge,
       labelKey: 'rules.clampChallenge.label',
       descriptionKey: 'rules.clampChallenge.description',
+    },
+    {
+      rules: args.specialDeck,
+      labelKey: 'rules.specialDeck.label',
+      descriptionKey: 'rules.specialDeck.description',
     },
   ];
 }

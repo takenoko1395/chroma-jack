@@ -1,5 +1,19 @@
 import { GameCard, GameCardCreationFailure } from '../models/card/GameCard';
+import { AdjustBrightnessEffect } from '../models/card/effects/AdjustBrightnessEffect';
+import { AdjustColorEffect } from '../models/card/effects/AdjustColorEffect';
+import { AdjustSaturationEffect } from '../models/card/effects/AdjustSaturationEffect';
+import {
+  CardEffectKind,
+  type CardEffect,
+} from '../models/card/effects/CardEffect';
+import {
+  ContinueRoundEffect,
+  PreventBurstEffect,
+  RevealColorValuesEffect,
+} from '../models/card/effects/RoundModifierEffects';
+import { SwapColorChannelsEffect } from '../models/card/effects/SwapColorChannelsEffect';
 import { Color } from '../models/color/Color';
+import { COLOR_CHANNELS } from '../models/color/ColorChannel';
 import type { GameState } from '../models/game/Game';
 import { GameRound, GameRoundActionStatus } from '../models/game/GameRound';
 import type {
@@ -10,7 +24,7 @@ import type {
 import { Hand } from '../models/hand/Hand';
 import type { ColorGenerationPolicy } from '../models/rules/ColorGenerationPolicy';
 import type { GameRules } from '../models/rules/GameRules';
-import type { IntegerRange } from '../models/shared/IntegerRange';
+import { IntegerRange } from '../models/shared/IntegerRange';
 import type { RandomGenerator } from '../repositories/RandomGenerator';
 
 // 注入されたルールと乱数生成器を固定し、ゲーム全体の状態を遷移させる。
@@ -115,6 +129,10 @@ export class GameEngine {
 
   // カード生成Policyを使い、黒ではないRGB加算カードを生成する。
   private generateCard(roundNumber: number, cardNumber: number): GameCard {
+    const kind = this.rules.cardTypeDistribution.choose(this.random);
+    if (kind !== CardEffectKind.AddColor) {
+      return this.generateSpecialCard(roundNumber, cardNumber, kind);
+    }
     const { cardColorRange, cardColorGenerationPolicy } = this.rules;
     const id = `round-${roundNumber}-card-${cardNumber}`;
     const red = cardColorGenerationPolicy.generateChannel(
@@ -139,6 +157,66 @@ export class GameEngine {
     throw new RangeError(
       `Random generator returned an invalid card: ${generatedCard}`,
     );
+  }
+
+  // 選ばれた種類に応じ、固有値を持つ特殊効果を生成する。
+  private generateSpecialCard(
+    roundNumber: number,
+    cardNumber: number,
+    kind: Exclude<CardEffectKind, CardEffectKind.AddColor>,
+  ): GameCard {
+    const id = `round-${roundNumber}-card-${cardNumber}`;
+    const channelIndex = this.random.nextInteger(this.createRange(0, 2));
+    const direction =
+      this.random.nextInteger(this.createRange(0, 1)) === 0 ? -1 : 1;
+    let effect: CardEffect;
+
+    switch (kind) {
+      case CardEffectKind.AdjustChannels: {
+        const channel = COLOR_CHANNELS[channelIndex];
+        const delta = { red: 0, green: 0, blue: 0 };
+        delta[channel] = direction * 32;
+        effect = new AdjustColorEffect(delta);
+        break;
+      }
+      case CardEffectKind.SwapChannels: {
+        const first = COLOR_CHANNELS[channelIndex];
+        const second =
+          COLOR_CHANNELS[(channelIndex + 1) % COLOR_CHANNELS.length];
+        effect = new SwapColorChannelsEffect(first, second);
+        break;
+      }
+      case CardEffectKind.AdjustSaturation:
+        effect = new AdjustSaturationEffect(direction > 0 ? 130 : 70);
+        break;
+      case CardEffectKind.AdjustBrightness:
+        effect = new AdjustBrightnessEffect(direction * 32);
+        break;
+      case CardEffectKind.ContinueRound:
+        effect = new ContinueRoundEffect();
+        break;
+      case CardEffectKind.RevealColorValues:
+        effect = new RevealColorValuesEffect();
+        break;
+      case CardEffectKind.PreventBurst:
+        effect = new PreventBurstEffect();
+        break;
+    }
+
+    const card = GameCard.createSpecial({ id, effect });
+    if (!(card instanceof GameCard)) {
+      throw new RangeError(`Could not create special card: ${card}`);
+    }
+    return card;
+  }
+
+  // 内部生成用の整数範囲を検証済みValue Objectへ変換する。
+  private createRange(minimum: number, maximum: number): IntegerRange {
+    const range = IntegerRange.create(minimum, maximum);
+    if (!(range instanceof IntegerRange)) {
+      throw new RangeError(`Invalid internal range: ${range}`);
+    }
+    return range;
   }
 
   // 新しい初期Handと山札を生成して指定ラウンドを開始する。

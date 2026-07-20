@@ -15,6 +15,10 @@
       "label": "Clamp Challenge",
       "description": "3枚の候補から1枚を選べます。1色までバーストしても上限で止まり、次の色のバーストでラウンド終了。初期色とカードは明るめに出やすく、バーストした色があると得点上限が下がります。"
     },
+    "specialDeck": {
+      "label": "Special Deck",
+      "description": "RGB増減・成分交換・彩度・明度・候補維持・数値表示・バースト防止カードが混ざる3枚選択ルールです。"
+    },
     "custom": {
       "description": "このルール固有の設定でプレイします。"
     }
@@ -26,14 +30,32 @@
     "points": "{{value}}点",
     "cards": "{{count}}枚",
     "currentColor": "現在の色",
-    "offeredColors": "候補の色",
+    "offeredColors": "候補カード",
     "offeredColor": "候補 {{number}}",
-    "acceptOfferedColor": "候補 {{number}}を加える",
-    "offerInstruction": "色を選ぶとすぐに現在色へ加わります",
+    "acceptOfferedColor": "候補 {{number}}を使う",
+    "offerInstruction": "カードを選ぶと効果がすぐに適用されます",
     "statusAnnouncement": "現在の色と候補の色を確認してください。ラウンド{{round}}、残り{{cards}}枚です",
     "continuedBurst": "{{count}}色バースト・上限の色で続行します",
     "discard": "候補をすべて捨てる",
-    "stand": "ここで止める"
+    "stand": "ここで止める",
+    "revealedColorValues": "カード効果で解禁された現在値",
+    "burstPrevention": "バースト防止 {{count}}回"
+  },
+  "cards": {
+    "addColor": "RGB加算",
+    "adjustChannels": "RGB増減",
+    "swapChannels": "成分交換",
+    "adjustSaturation": "彩度操作",
+    "adjustBrightness": "明度操作",
+    "continueRound": "候補維持",
+    "revealColorValues": "数値表示",
+    "preventBurst": "バースト防止",
+    "details": {
+      "adjustChannels": "{{channel}} {{amount}}",
+      "swapChannels": "{{first}} ⇄ {{second}}",
+      "adjustSaturation": "彩度 {{percentage}}%",
+      "adjustBrightness": "明度 {{amount}}"
+    }
   },
   "roundResult": {
     "finished": "ラウンド終了",

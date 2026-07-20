@@ -1,25 +1,29 @@
 import { Box, ButtonBase, Typography } from '@mui/material';
-import type { GameCard } from '../../domain/models/card/GameCard';
+import { useTranslation } from 'react-i18next';
+import type { GameCardViewModel } from '../models/GameCardViewModel';
 
 type GameCardViewProps = {
-  card: GameCard;
+  card: GameCardViewModel;
   label: string;
   actionLabel: string;
   onAccept: () => void;
 };
 
-// 公開候補のカードを、数値を見せずに選択できる表示へ変換する。
+// 表示用モデルに解決済みのカード面と選択操作を描画する。
 export function GameCardView({
   card,
   label,
   actionLabel,
   onAccept,
 }: GameCardViewProps) {
-  const { red, green, blue } = card.displayColor;
+  const { t } = useTranslation();
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">
         {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={700}>
+        {t(card.titleKey, card.titleValues)}
       </Typography>
       <ButtonBase
         aria-label={actionLabel}
@@ -28,7 +32,9 @@ export function GameCardView({
           mt: 0.5,
           width: '100%',
           height: { xs: 112, sm: 160, md: 190 },
-          bgcolor: `rgb(${red}, ${green}, ${blue})`,
+          bgcolor: card.backgroundColor,
+          backgroundImage: card.backgroundImage,
+          backgroundSize: '24px 24px',
           border: '1px solid rgba(0, 0, 0, 0.2)',
           borderRadius: 3,
           boxShadow: '0 12px 32px rgba(0, 0, 0, 0.07)',

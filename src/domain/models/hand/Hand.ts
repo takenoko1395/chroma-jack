@@ -24,9 +24,11 @@ export class Hand {
 
   // 現在色とクランプ履歴から手札を組み立てる。
   constructor(
-    readonly color: Color,
+    readonly color: Color, // readonlyをつけると、暗黙的にメンバ変数としても定義される
     clampedChannels: ReadonlySet<ColorChannel> = new Set(),
   ) {
+    // NOTE: 直接変更されないように、クランプ済み成分をコピーして保持する。
+    // Defensive Copy（防御的コピー）
     this.clampedChannelSet = new Set(clampedChannels);
   }
 
@@ -37,14 +39,23 @@ export class Hand {
 
   // Policyに従って色を加算し、継続またはバースト結果を返す。
   addColor(amount: Color, overflowPolicy: OverflowPolicy): HandAddition {
-    const attemptedColor = this.color.add(amount);
+    return this.changeColor(this.color.add(amount), overflowPolicy);
+  }
+
+  // Policyに従って次の色へ変更し、継続またはバースト結果を返す。
+  changeColor(
+    attemptedColor: Color,
+    overflowPolicy: OverflowPolicy,
+    preventBurst = false,
+  ): HandAddition {
     const overflowedChannels = COLOR_CHANNELS.filter(
       (channel) => attemptedColor[channel] > Hand.CHANNEL_LIMIT,
     );
     const burstChannels = new Set(this.clampedChannelSet);
     overflowedChannels.forEach((channel) => burstChannels.add(channel));
     const attemptedHand = new Hand(attemptedColor, burstChannels);
-    const endsRound = !overflowPolicy.canContinueWith(burstChannels.size);
+    const endsRound =
+      !preventBurst && !overflowPolicy.canContinueWith(burstChannels.size);
 
     if (endsRound) {
       return {

@@ -6,6 +6,7 @@ import { CardOffer } from '../widgets/CardOffer';
 import { ColorPanel } from '../widgets/ColorPanel';
 import { GameStatus } from '../widgets/GameStatus';
 import { RoundResult } from '../widgets/RoundResult';
+import { ColorValueSummary } from '../widgets/ColorValueSummary';
 
 type GamePageProps = {
   game: GameState;
@@ -43,6 +44,12 @@ export function GamePage({
       />
       <Stack sx={{ mt: 3 }}>
         {round && <ColorPanel color={round.hand.color} />}
+        {game.phase === 'playing' && round?.revealsColorValues && (
+          <ColorValueSummary
+            color={round.hand.color}
+            label={t('game.revealedColorValues')}
+          />
+        )}
         {game.phase === 'playing' && round && round.offeredCards.length > 0 && (
           <CardOffer cards={round.offeredCards} onAccept={onAccept} />
         )}
@@ -74,6 +81,13 @@ export function GamePage({
               <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
                 {t('game.continuedBurst', {
                   count: round.hand.clampedChannels.size,
+                })}
+              </Typography>
+            )}
+            {round && round.burstPreventionCount > 0 && (
+              <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
+                {t('game.burstPrevention', {
+                  count: round.burstPreventionCount,
                 })}
               </Typography>
             )}

@@ -7,6 +7,10 @@ import {
 } from './ColorGenerationPolicy';
 import { OverflowPolicy } from './OverflowPolicy';
 import { ScorePolicy } from './ScorePolicy';
+import {
+  CardTypeDistribution,
+  createCardTypeWeights,
+} from './CardTypeDistribution';
 
 // 固定値から検証済みのルール用整数範囲を生成する。
 function createRange(minimum: number, maximum: number): IntegerRange {
@@ -27,6 +31,7 @@ export type GameRulesArgs = Readonly<{
   cardColorRange: IntegerRange;
   initialColorGenerationPolicy: ColorGenerationPolicy;
   cardColorGenerationPolicy: ColorGenerationPolicy;
+  cardTypeDistribution: CardTypeDistribution;
   overflowPolicy: OverflowPolicy;
   scorePolicy: ScorePolicy;
 }>;
@@ -41,6 +46,7 @@ export class GameRules {
   readonly cardColorRange: IntegerRange;
   readonly initialColorGenerationPolicy: ColorGenerationPolicy;
   readonly cardColorGenerationPolicy: ColorGenerationPolicy;
+  readonly cardTypeDistribution: CardTypeDistribution;
   readonly overflowPolicy: OverflowPolicy;
   readonly scorePolicy: ScorePolicy;
 
@@ -87,6 +93,7 @@ export class GameRules {
     this.cardColorRange = args.cardColorRange;
     this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
     this.cardColorGenerationPolicy = args.cardColorGenerationPolicy;
+    this.cardTypeDistribution = args.cardTypeDistribution;
     this.overflowPolicy = args.overflowPolicy;
     this.scorePolicy = args.scorePolicy;
   }
@@ -109,6 +116,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
+      cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy(1000, 0),
     });
@@ -132,8 +140,44 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Higher,
       ),
+      cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.clampAndContinue(1),
       scorePolicy: new ScorePolicy(1000, 200),
+    });
+  }
+
+  // すべての特殊カードを試せる3枚選択ルールを生成する。
+  static specialDeck(): GameRules {
+    return new GameRules({
+      id: 'special-deck',
+      totalRounds: 5,
+      deckSize: 30,
+      cardOfferSize: 3,
+      initialColorRange: createRange(0, 127),
+      cardColorRange: createRange(
+        GameCard.MINIMUM_CHANNEL,
+        GameCard.MAXIMUM_CHANNEL,
+      ),
+      initialColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Lower,
+      ),
+      cardColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Uniform,
+      ),
+      cardTypeDistribution: new CardTypeDistribution(
+        createCardTypeWeights({
+          addColor: 60,
+          adjustChannels: 10,
+          swapChannels: 10,
+          adjustSaturation: 8,
+          adjustBrightness: 8,
+          continueRound: 5,
+          revealColorValues: 5,
+          preventBurst: 1,
+        }),
+      ),
+      overflowPolicy: OverflowPolicy.classic(),
+      scorePolicy: new ScorePolicy(1000, 0),
     });
   }
 }

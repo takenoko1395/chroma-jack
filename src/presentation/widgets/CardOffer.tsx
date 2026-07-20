@@ -1,6 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { GameCard } from '../../domain/models/card/GameCard';
+import { createGameCardViewModel } from '../mappers/createGameCardViewModel';
 import { GameCardView } from './GameCardView';
 
 type CardOfferProps = {
@@ -31,15 +32,18 @@ export function CardOffer({ cards, onAccept }: CardOfferProps) {
           gap: { xs: 1, sm: 2 },
         }}
       >
-        {cards.map((card, index) => (
-          <GameCardView
-            key={card.id}
-            card={card}
-            label={t('game.offeredColor', { number: index + 1 })}
-            actionLabel={t('game.acceptOfferedColor', { number: index + 1 })}
-            onAccept={() => onAccept(card.id)}
-          />
-        ))}
+        {cards.map((card, index) => {
+          const viewModel = createGameCardViewModel(card);
+          return (
+            <GameCardView
+              key={viewModel.id}
+              card={viewModel}
+              label={t('game.offeredColor', { number: index + 1 })}
+              actionLabel={t('game.acceptOfferedColor', { number: index + 1 })}
+              onAccept={() => onAccept(card.id)}
+            />
+          );
+        })}
       </Box>
     </Box>
   );

@@ -165,15 +165,11 @@ type RgbColor = {
 
 ## 4.4 ゲームカード
 
-カードは表示用の色と、使用時に適用する効果を持つ。現在の通常カードは、
-RGBそれぞれの加算値を `AddColorEffect` として保持する。
+カードは識別子と、使用時に適用する効果だけを持つ。現在の通常カードは、
+RGBそれぞれの加算値を `AddColorEffect` が保持する。
 
 ```ts
-new GameCard({
-  id,
-  displayColor,
-  effect: new AddColorEffect(amount),
-});
+GameCard.createAddColor(id, red, green, blue);
 ```
 
 `GameRound` が選択されたカードの効果を現在の `Hand` へ適用し、
@@ -745,6 +741,22 @@ type GameRound = {
 
 必要に応じてプロパティを追加してよいが、UI都合の状態をDomainエンティティへ混入させない。
 
+## 8.1 カード効果とラウンド状態
+
+`GameCard` は識別子と `CardEffect` だけを組み合わせる。効果のkindと固有値は各Effect自身が持つ。
+現在は通常のRGB加算に加え、
+RGB増減、成分交換、彩度・明度操作、未選択候補の維持、数値表示解禁、バースト防止を実装する。
+
+効果は `CardEffectResult` としてHandの変更、バースト結果、ラウンドへ保持する指示を返す。
+`GameRound` はカード種別を判定せず、この共通結果だけを使って候補とラウンド状態を更新する。
+数値表示解禁と未使用のバースト防止回数は現在ラウンドだけで有効とし、次ラウンドへ持ち越さない。
+
+カードの装飾色、模様、翻訳キーはDomainへ含めない。PresentationのMapperがEffectのkindと
+固有値から `GameCardViewModel` を生成し、加算カードだけは `AddColorEffect.amount` を色面として描画する。
+
+カード種類の出現率は `GameRules.cardTypeDistribution` に相対ウェイトとして保持する。
+全ウェイトは非負整数で、少なくとも1種類は正の値でなければならない。
+
 ---
 
 # 9. ゲーム進行の詳細
@@ -990,12 +1002,7 @@ npm run build
 - 連勝
 - 捨て札枚数の制限
 - カードのレアリティ
-- 特殊カード
-- RGBの一部だけを増減するカード
-- 色成分の交換
-- 彩度や明度を操作するカード
 - 回復カード
-- バースト回避カード
 
 ## バースト方式
 
@@ -1010,7 +1017,6 @@ npm run build
 ## 表示・演出
 
 - 加算後の色のプレビュー
-- RGB数値表示モード
 - 初心者向け成分ゲージ
 - 危険度表示
 - 色覚補助モード

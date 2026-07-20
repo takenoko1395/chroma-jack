@@ -35,7 +35,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Start game' }));
     expect(screen.getByLabelText('Current color')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Add choice 1' }),
+      screen.getByRole('button', { name: 'Use choice 1' }),
     ).toBeInTheDocument();
   });
 
@@ -91,7 +91,7 @@ describe('App', () => {
 
     expect(screen.getByLabelText('現在の色')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 1を加える' }),
+      screen.getByRole('button', { name: '候補 1を使う' }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: '選んだ色を加える' }),
@@ -107,7 +107,7 @@ describe('App', () => {
     expect(screen.queryByLabelText(/色の数値/)).not.toBeInTheDocument();
   });
 
-  it('Clamp Challengeでは3枚から選んだ1枚を加える', async () => {
+  it('Clamp Challengeでは3枚から選んだ1枚を使う', async () => {
     const user = userEvent.setup();
     renderApp();
     const rulesSelect = screen.getByRole('combobox', {
@@ -118,16 +118,16 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
 
     expect(
-      screen.getByRole('button', { name: '候補 1を加える' }),
+      screen.getByRole('button', { name: '候補 1を使う' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 2を加える' }),
+      screen.getByRole('button', { name: '候補 2を使う' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: '候補 3を加える' }),
+      screen.getByRole('button', { name: '候補 3を使う' }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '候補 2を加える' }));
+    await user.click(screen.getByRole('button', { name: '候補 2を使う' }));
     expect(screen.getByText('21枚')).toBeInTheDocument();
   });
 

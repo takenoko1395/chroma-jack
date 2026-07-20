@@ -11,9 +11,11 @@ import {
 
 const CLASSIC_RULES = GameRules.classic();
 const CLAMP_CHALLENGE_RULES = GameRules.clampChallenge();
+const SPECIAL_DECK_RULES = GameRules.specialDeck();
 const BUILT_IN_RULE_OPTIONS = createBuiltInRuleOptions({
   classic: CLASSIC_RULES,
   clampChallenge: CLAMP_CHALLENGE_RULES,
+  specialDeck: SPECIAL_DECK_RULES,
 });
 
 type AppRouterProps = {

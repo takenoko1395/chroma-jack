@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Color } from '../color/Color';
 import { Hand } from '../hand/Hand';
-import { HandAdditionStatus } from '../hand/Hand';
 import { OverflowPolicy } from '../rules/OverflowPolicy';
 import { GameCard, GameCardCreationFailure } from './GameCard';
 
 describe('GameCard', () => {
-  it('表示色とRGB加算効果を持つ通常カードを生成する', () => {
+  it('RGB加算効果を持つ通常カードを生成する', () => {
     const card = GameCard.createAddColor('card', 0, 10, 160);
     expect(card).toBeInstanceOf(GameCard);
   });
@@ -26,9 +25,13 @@ describe('GameCard', () => {
     const card = GameCard.createAddColor('card', 1, 2, 3);
     if (!(color instanceof Color) || !(card instanceof GameCard)) return;
 
-    const addition = card.applyTo(new Hand(color), OverflowPolicy.classic());
+    const addition = card.applyTo({
+      hand: new Hand(color),
+      overflowPolicy: OverflowPolicy.classic(),
+      canPreventBurst: false,
+    });
 
-    expect(addition.status).toBe(HandAdditionStatus.Added);
+    expect(addition.burstHand).toBeNull();
     expect(addition.hand.color).toMatchObject({ red: 11, green: 22, blue: 33 });
   });
 });

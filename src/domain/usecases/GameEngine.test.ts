@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FixedRandomGenerator } from '../../test/helpers/FixedRandomGenerator';
 import { GameCard } from '../models/card/GameCard';
+import { CardEffectKind } from '../models/card/effects/CardEffect';
 import { Color } from '../models/color/Color';
 import type { GameState } from '../models/game/Game';
 import { GameRound } from '../models/game/GameRound';
@@ -46,7 +47,9 @@ describe('game actions', () => {
     ];
     expect(deck).toHaveLength(12);
     deck.forEach((card) => {
-      const channels = Object.values(card.displayColor);
+      expect(card.effect.kind).toBe(CardEffectKind.AddColor);
+      if (card.effect.kind !== CardEffectKind.AddColor) return;
+      const channels = Object.values(card.effect.amount);
       expect(channels.every((channel) => channel >= 0 && channel <= 160)).toBe(
         true,
       );
@@ -157,6 +160,7 @@ describe('game actions', () => {
       cardColorRange: base.cardColorRange,
       initialColorGenerationPolicy: base.initialColorGenerationPolicy,
       cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+      cardTypeDistribution: base.cardTypeDistribution,
       overflowPolicy: base.overflowPolicy,
       scorePolicy: base.scorePolicy,
     });

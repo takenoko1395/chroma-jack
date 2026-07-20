@@ -29,20 +29,22 @@ export function GamePage({
 }: GamePageProps) {
   const { t } = useTranslation();
   const result = game.roundResults.at(-1);
-  const cardsRemaining = game.remainingDeck.length + game.offeredCards.length;
+  const round = game.currentRound;
+  const cardsRemaining =
+    (round?.remainingDeck.length ?? 0) + (round?.offeredCards.length ?? 0);
 
   return (
     <Container maxWidth="lg" component="main" sx={{ py: { xs: 2.5, sm: 4 } }}>
       <GameStatus
-        currentRound={game.currentRoundNumber}
+        currentRound={round?.roundNumber ?? 0}
         totalRounds={totalRounds}
         totalScore={totalScore}
         cardsRemaining={cardsRemaining}
       />
       <Stack sx={{ mt: 3 }}>
-        {game.currentHand && <ColorPanel color={game.currentHand.color} />}
-        {game.phase === 'playing' && game.offeredCards.length > 0 && (
-          <CardOffer cards={game.offeredCards} onAccept={onAccept} />
+        {round && <ColorPanel color={round.hand.color} />}
+        {game.phase === 'playing' && round && round.offeredCards.length > 0 && (
+          <CardOffer cards={round.offeredCards} onAccept={onAccept} />
         )}
       </Stack>
       <Typography
@@ -60,7 +62,7 @@ export function GamePage({
       >
         {game.phase === 'playing'
           ? t('game.statusAnnouncement', {
-              round: game.currentRoundNumber,
+              round: round?.roundNumber ?? 0,
               cards: cardsRemaining,
             })
           : ''}
@@ -68,10 +70,10 @@ export function GamePage({
       <Box>
         {game.phase === 'playing' && (
           <>
-            {game.currentHand && game.currentHand.clampedChannels.size > 0 && (
+            {round && round.hand.clampedChannels.size > 0 && (
               <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
                 {t('game.continuedBurst', {
-                  count: game.currentHand.clampedChannels.size,
+                  count: round.hand.clampedChannels.size,
                 })}
               </Typography>
             )}
@@ -81,7 +83,7 @@ export function GamePage({
         {game.phase === 'roundFinished' && result && (
           <RoundResult
             result={result}
-            isLastRound={game.currentRoundNumber === totalRounds}
+            isLastRound={round?.roundNumber === totalRounds}
             onContinue={onContinue}
           />
         )}

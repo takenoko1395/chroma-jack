@@ -1,10 +1,10 @@
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { ColorCard } from '../../domain/models/hand/ColorCard';
-import { ColorCardView } from './ColorCardView';
+import type { GameCard } from '../../domain/models/card/GameCard';
+import { GameCardView } from './GameCardView';
 
 type CardOfferProps = {
-  cards: readonly ColorCard[];
+  cards: readonly GameCard[];
   onAccept: (cardId: string) => void;
 };
 
@@ -32,7 +32,7 @@ export function CardOffer({ cards, onAccept }: CardOfferProps) {
         }}
       >
         {cards.map((card, index) => (
-          <ColorCardView
+          <GameCardView
             key={card.id}
             card={card}
             label={t('game.offeredColor', { number: index + 1 })}

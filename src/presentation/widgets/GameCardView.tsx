@@ -1,21 +1,21 @@
 import { Box, ButtonBase, Typography } from '@mui/material';
-import type { ColorCard } from '../../domain/models/hand/ColorCard';
+import type { GameCard } from '../../domain/models/card/GameCard';
 
-type ColorCardViewProps = {
-  card: ColorCard;
+type GameCardViewProps = {
+  card: GameCard;
   label: string;
   actionLabel: string;
   onAccept: () => void;
 };
 
-// 公開候補の色を、数値を見せずに選択できるカードとして表示する。
-export function ColorCardView({
+// 公開候補のカードを、数値を見せずに選択できる表示へ変換する。
+export function GameCardView({
   card,
   label,
   actionLabel,
   onAccept,
-}: ColorCardViewProps) {
-  const { red, green, blue } = card.color;
+}: GameCardViewProps) {
+  const { red, green, blue } = card.displayColor;
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary">

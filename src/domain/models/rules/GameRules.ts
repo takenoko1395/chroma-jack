@@ -1,4 +1,4 @@
-import { ColorCard } from '../hand/ColorCard';
+import { GameCard } from '../card/GameCard';
 import { Hand } from '../hand/Hand';
 import { IntegerRange } from '../shared/IntegerRange';
 import {
@@ -70,8 +70,8 @@ export class GameRules {
       throw new RangeError('Initial colors must fit within the hand limit.');
     }
     if (
-      args.cardColorRange.minimum < ColorCard.MINIMUM_CHANNEL ||
-      args.cardColorRange.maximum > ColorCard.MAXIMUM_CHANNEL ||
+      args.cardColorRange.minimum < GameCard.MINIMUM_CHANNEL ||
+      args.cardColorRange.maximum > GameCard.MAXIMUM_CHANNEL ||
       args.cardColorRange.maximum === 0
     ) {
       throw new RangeError(
@@ -100,8 +100,8 @@ export class GameRules {
       cardOfferSize: 1,
       initialColorRange: createRange(0, 20),
       cardColorRange: createRange(
-        ColorCard.MINIMUM_CHANNEL,
-        ColorCard.MAXIMUM_CHANNEL,
+        GameCard.MINIMUM_CHANNEL,
+        GameCard.MAXIMUM_CHANNEL,
       ),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Lower,
@@ -123,8 +123,8 @@ export class GameRules {
       cardOfferSize: 3,
       initialColorRange: createRange(0, 159),
       cardColorRange: createRange(
-        ColorCard.MINIMUM_CHANNEL,
-        ColorCard.MAXIMUM_CHANNEL,
+        GameCard.MINIMUM_CHANNEL,
+        GameCard.MAXIMUM_CHANNEL,
       ),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Lower,

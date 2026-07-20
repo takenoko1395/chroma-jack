@@ -36,7 +36,9 @@ npm run build
 依存方向を表示からルール側へ向けた、小規模なレイヤー構成です。
 
 - `src/domain/models/color`: 上限を持たない非負整数の色Value Object
-- `src/domain/models/hand`: 色カードと、加算・バースト判定・スコア計算を持つ手札モデル
+- `src/domain/models/card`: 表示情報と効果を組み合わせるゲームカード、およびカード効果
+- `src/domain/models/game`: ゲーム状態、ラウンド内のカード適用と進行、ラウンド結果
+- `src/domain/models/hand`: 色の加算・バースト判定・スコア計算に使う手札モデル
 - `src/domain/models/game`: ゲーム進行、ラウンド結果、ゲーム設定
 - `src/domain/models/rules`: 色生成傾向、許容バースト色数、スコアのPolicy
 - `src/domain/models/shared`: 検証済み整数範囲などの共有Value Object

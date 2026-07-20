@@ -1,34 +1,52 @@
 import { describe, expect, it } from 'vitest';
+import { FixedRandomGenerator } from '../../test/helpers/FixedRandomGenerator';
+import { GameCard } from '../models/card/GameCard';
 import { Color } from '../models/color/Color';
 import type { GameState } from '../models/game/Game';
+import { GameRound } from '../models/game/GameRound';
 import { GameScore } from '../models/game/GameScore';
-import { ColorCard } from '../models/hand/ColorCard';
 import { Hand } from '../models/hand/Hand';
 import { GameRules } from '../models/rules/GameRules';
 import { IntegerRange } from '../models/shared/IntegerRange';
-import { FixedRandomGenerator } from '../../test/helpers/FixedRandomGenerator';
 import { GameEngine } from './GameEngine';
 
+// 指定した乱数列でClassicルールのEngineを生成する。
 function createEngine(values: readonly number[]): GameEngine {
   return new GameEngine(GameRules.classic(), new FixedRandomGenerator(values));
+}
+
+// テスト用の通常加算カードを生成する。
+function createCard(
+  id: string,
+  red: number,
+  green: number,
+  blue: number,
+): GameCard {
+  const card = GameCard.createAddColor(id, red, green, blue);
+  if (!(card instanceof GameCard)) throw new Error('Invalid test card');
+  return card;
 }
 
 describe('game actions', () => {
   it('範囲内の初期色と黒でない12枚のカードでラウンド1を始める', () => {
     const game = createEngine([0, 63, 127, 0]).startGame();
+    const round = game.currentRound;
 
     expect(game.phase).toBe('playing');
-    expect(game.currentRoundNumber).toBe(1);
-    expect(game.currentHand).not.toBeNull();
+    expect(round?.roundNumber).toBe(1);
+    expect(round).not.toBeNull();
     expect(
-      Object.values(game.currentHand?.color ?? {}).every(
+      Object.values(round?.hand.color ?? {}).every(
         (channel) => channel >= 0 && channel <= 127,
       ),
     ).toBe(true);
-    const deck = [...game.offeredCards, ...game.remainingDeck];
+    const deck = [
+      ...(round?.offeredCards ?? []),
+      ...(round?.remainingDeck ?? []),
+    ];
     expect(deck).toHaveLength(12);
     deck.forEach((card) => {
-      const channels = Object.values(card.color);
+      const channels = Object.values(card.displayColor);
       expect(channels.every((channel) => channel >= 0 && channel <= 160)).toBe(
         true,
       );
@@ -39,18 +57,19 @@ describe('game actions', () => {
   it('加えると現在色を更新し、捨てると現在色を維持する', () => {
     const engine = createEngine([10]);
     const started = engine.startGame();
-    const offeredCard = started.offeredCards[0];
+    const offeredCard = started.currentRound?.offeredCards[0];
     expect(offeredCard).toBeDefined();
     if (offeredCard === undefined) return;
+
     const accepted = engine.acceptOfferedCard(started, offeredCard.id);
-    expect(accepted.currentHand?.color).toMatchObject({
+    expect(accepted.currentRound?.hand.color).toMatchObject({
       red: 20,
       green: 20,
       blue: 20,
     });
 
     const discarded = engine.discardOffer(accepted);
-    expect(discarded.currentHand).toBe(accepted.currentHand);
+    expect(discarded.currentRound?.hand).toBe(accepted.currentRound?.hand);
   });
 
   it('止めるとスコアを確定する', () => {
@@ -59,44 +78,39 @@ describe('game actions', () => {
     expect(finished.phase).toBe('roundFinished');
     expect(finished.roundResults).toHaveLength(1);
     expect(finished.roundResults[0]?.endReason).toBe('stood');
-    expect(finished.offeredCards).toHaveLength(1);
-    expect(finished.remainingDeck).toHaveLength(11);
+    expect(finished.currentRound?.offeredCards).toHaveLength(1);
+    expect(finished.currentRound?.remainingDeck).toHaveLength(11);
   });
 
   it('最後のカードを使うと山札切れで終了する', () => {
     const engine = createEngine([1]);
     let game = engine.startGame();
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 12; index += 1)
       game = engine.discardOffer(game);
-    }
+
     expect(game.phase).toBe('roundFinished');
     expect(game.roundResults[0]?.endReason).toBe('deckExhausted');
-    expect(game.offeredCards).toHaveLength(0);
+    expect(game.currentRound?.offeredCards).toHaveLength(0);
   });
 
   it('加算でバーストすると直前の色を保って0点にする', () => {
     const currentColor = Color.create(250, 10, 10);
-    const currentCard = ColorCard.create('burst', 6, 1, 1);
-    expect(currentColor).toBeInstanceOf(Color);
-    expect(currentCard).toBeInstanceOf(ColorCard);
-    if (
-      !(currentColor instanceof Color) ||
-      !(currentCard instanceof ColorCard)
-    ) {
-      return;
-    }
+    if (!(currentColor instanceof Color)) return;
+    const currentCard = createCard('burst', 6, 1, 1);
     const state: GameState = {
       phase: 'playing',
-      currentRoundNumber: 1,
-      currentHand: new Hand(currentColor),
-      offeredCards: [currentCard],
-      remainingDeck: [],
+      currentRound: new GameRound({
+        roundNumber: 1,
+        hand: new Hand(currentColor),
+        offeredCards: [currentCard],
+        remainingDeck: [],
+      }),
       roundResults: [],
     };
-    const stateEngine = createEngine([1]);
-    const finished = stateEngine.acceptOfferedCard(state, currentCard.id);
+
+    const finished = createEngine([1]).acceptOfferedCard(state, currentCard.id);
     expect(finished.phase).toBe('roundFinished');
-    expect(finished.currentHand).toBe(state.currentHand);
+    expect(finished.currentRound?.hand).toBe(state.currentRound?.hand);
     expect(finished.roundResults[0]).toMatchObject({
       score: 0,
       endReason: 'burst',
@@ -133,7 +147,6 @@ describe('game actions', () => {
   it('外から注入した初期色上限を使用する', () => {
     const base = GameRules.classic();
     const initialRange = IntegerRange.create(0, 10);
-    expect(initialRange).toBeInstanceOf(IntegerRange);
     if (!(initialRange instanceof IntegerRange)) return;
     const rules = new GameRules({
       id: 'small-initial-color',
@@ -152,7 +165,7 @@ describe('game actions', () => {
       new FixedRandomGenerator([127]),
     ).startGame();
 
-    expect(game.currentHand?.color).toMatchObject({
+    expect(game.currentRound?.hand.color).toMatchObject({
       red: 10,
       green: 10,
       blue: 10,
@@ -163,38 +176,31 @@ describe('game actions', () => {
     const rules = GameRules.clampChallenge();
     const engine = new GameEngine(rules, new FixedRandomGenerator([1]));
     const color = Color.create(250, 255, 255);
-    const currentCard = ColorCard.create('current', 10, 0, 0);
-    const nextCard = ColorCard.create('next', 1, 1, 1);
-    const discardedCard1 = ColorCard.create('discarded-1', 1, 0, 0);
-    const discardedCard2 = ColorCard.create('discarded-2', 0, 1, 0);
-    expect(color).toBeInstanceOf(Color);
-    expect(currentCard).toBeInstanceOf(ColorCard);
-    expect(nextCard).toBeInstanceOf(ColorCard);
-    expect(discardedCard1).toBeInstanceOf(ColorCard);
-    expect(discardedCard2).toBeInstanceOf(ColorCard);
-    if (
-      !(color instanceof Color) ||
-      !(currentCard instanceof ColorCard) ||
-      !(nextCard instanceof ColorCard) ||
-      !(discardedCard1 instanceof ColorCard) ||
-      !(discardedCard2 instanceof ColorCard)
-    ) {
-      return;
-    }
+    if (!(color instanceof Color)) return;
+    const currentCard = createCard('current', 10, 0, 0);
+    const nextCard = createCard('next', 1, 1, 1);
     const state: GameState = {
       phase: 'playing',
-      currentRoundNumber: 1,
-      currentHand: new Hand(color),
-      offeredCards: [currentCard, discardedCard1, discardedCard2],
-      remainingDeck: [nextCard],
+      currentRound: new GameRound({
+        roundNumber: 1,
+        hand: new Hand(color),
+        offeredCards: [
+          currentCard,
+          createCard('discarded-1', 1, 0, 0),
+          createCard('discarded-2', 0, 1, 0),
+        ],
+        remainingDeck: [nextCard],
+      }),
       roundResults: [],
     };
 
     const continued = engine.acceptOfferedCard(state, currentCard.id);
     expect(continued.phase).toBe('playing');
-    expect(continued.currentHand?.color.red).toBe(255);
-    expect(continued.currentHand?.clampedChannels.size).toBe(1);
-    expect(continued.offeredCards.map((card) => card.id)).toEqual(['next']);
+    expect(continued.currentRound?.hand.color.red).toBe(255);
+    expect(continued.currentRound?.hand.clampedChannels.size).toBe(1);
+    expect(continued.currentRound?.offeredCards.map((card) => card.id)).toEqual(
+      ['next'],
+    );
 
     const finished = engine.standCurrentRound(continued);
     expect(finished.roundResults[0]?.score).toBe(800);

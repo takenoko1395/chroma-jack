@@ -2,8 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { Color } from '../../domain/models/color/Color';
 import { ColorChannel } from '../../domain/models/color/ColorChannel';
+import { GameCard } from '../../domain/models/card/GameCard';
 import type { GameState } from '../../domain/models/game/Game';
-import { ColorCard } from '../../domain/models/hand/ColorCard';
+import { GameRound } from '../../domain/models/game/GameRound';
 import { Hand } from '../../domain/models/hand/Hand';
 import { AppProviders } from '../providers/AppProviders';
 import { GamePage } from './GamePage';
@@ -11,16 +12,18 @@ import { GamePage } from './GamePage';
 // 継続可能なバースト後のプレイ状態を生成する。
 function createContinuedGame(): GameState {
   const color = Color.create(255, 100, 100);
-  const card = ColorCard.create('next', 1, 1, 1);
-  if (!(color instanceof Color) || !(card instanceof ColorCard)) {
+  const card = GameCard.createAddColor('next', 1, 1, 1);
+  if (!(color instanceof Color) || !(card instanceof GameCard)) {
     throw new RangeError('Invalid test game values.');
   }
   return {
     phase: 'playing',
-    currentRoundNumber: 1,
-    currentHand: new Hand(color, new Set([ColorChannel.Red])),
-    offeredCards: [card],
-    remainingDeck: [],
+    currentRound: new GameRound({
+      roundNumber: 1,
+      hand: new Hand(color, new Set([ColorChannel.Red])),
+      offeredCards: [card],
+      remainingDeck: [],
+    }),
     roundResults: [],
   };
 }

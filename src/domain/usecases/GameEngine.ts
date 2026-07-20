@@ -1,20 +1,19 @@
+import { GameCard, GameCardCreationFailure } from '../models/card/GameCard';
 import { Color } from '../models/color/Color';
 import type { GameState } from '../models/game/Game';
+import { GameRound, GameRoundActionStatus } from '../models/game/GameRound';
 import type {
   BurstChannels,
   NormalRoundEndReason,
   RoundResult,
 } from '../models/game/Round';
-import { ColorCard, ColorCardCreationFailure } from '../models/hand/ColorCard';
-import { Hand, HandAdditionStatus } from '../models/hand/Hand';
+import { Hand } from '../models/hand/Hand';
 import type { ColorGenerationPolicy } from '../models/rules/ColorGenerationPolicy';
 import type { GameRules } from '../models/rules/GameRules';
 import type { IntegerRange } from '../models/shared/IntegerRange';
 import type { RandomGenerator } from '../repositories/RandomGenerator';
 
-// 注入されたルールと乱数生成器を固定し、ゲーム状態を遷移させる。
-// NOTE: Usecase(振る舞い)のため、状態遷移のみに責務を限定し、UIや永続化の責務は持たない。
-// 状態の保持はReactのHooksに委ねる設計。
+// 注入されたルールと乱数生成器を固定し、ゲーム全体の状態を遷移させる。
 export class GameEngine {
   // 1ゲームで固定するルールと乱数生成器を受け取る。
   constructor(
@@ -26,10 +25,7 @@ export class GameEngine {
   createInitialState(): GameState {
     return {
       phase: 'notStarted',
-      currentRoundNumber: 0,
-      currentHand: null,
-      offeredCards: [],
-      remainingDeck: [],
+      currentRound: null,
       roundResults: [],
     };
   }
@@ -39,59 +35,59 @@ export class GameEngine {
     return this.createRound(this.createInitialState(), 1);
   }
 
-  // 公開候補からIDで選んだ1枚だけを手札へ加え、次の候補へ進める。
+  // 選択された候補カードの適用をGameRoundへ依頼し、ゲーム状態へ反映する。
   acceptOfferedCard(state: GameState, cardId: string): GameState {
-    if (state.phase !== 'playing' || state.currentHand === null) {
-      return state;
-    }
-    const selectedCard = state.offeredCards.find((card) => card.id === cardId);
-    if (selectedCard === undefined) return state;
-
-    const addition = state.currentHand.add(
-      selectedCard,
-      this.rules.overflowPolicy,
-    );
-    if (addition.status === HandAdditionStatus.Burst) {
-      const [firstBurstChannel, ...otherBurstChannels] =
-        addition.hand.clampedChannels;
-      if (firstBurstChannel === undefined) {
-        throw new RangeError(
-          'A burst must contain at least one color channel.',
-        );
-      }
-      return this.finishBurstRound(
-        { ...state, offeredCards: [] },
-        addition.hand,
-        [firstBurstChannel, ...otherBurstChannels],
-      );
-    }
-    return this.revealNextOffer({
-      ...state,
-      currentHand: addition.hand,
-      offeredCards: [],
+    if (state.phase !== 'playing' || state.currentRound === null) return state;
+    const action = state.currentRound.playCard({
+      cardId,
+      overflowPolicy: this.rules.overflowPolicy,
+      cardOfferSize: this.rules.cardOfferSize,
     });
+
+    if (action.status === GameRoundActionStatus.CardNotOffered) return state;
+    if (action.status === GameRoundActionStatus.Burst) {
+      if (action.burstHand === null) {
+        throw new RangeError('A burst action must contain the attempted hand.');
+      }
+      return this.finishBurstRound(state, action.round, action.burstHand);
+    }
+    if (action.status === GameRoundActionStatus.DeckExhausted) {
+      return this.finishRound(state, action.round, 'deckExhausted');
+    }
+    return { ...state, currentRound: action.round };
   }
 
-  // 公開中の候補をすべて破棄し、次の候補を公開する。
+  // 公開候補の一括破棄をGameRoundへ依頼し、次候補または終了へ進める。
   discardOffer(state: GameState): GameState {
-    if (state.phase !== 'playing' || state.offeredCards.length === 0) {
+    if (
+      state.phase !== 'playing' ||
+      state.currentRound === null ||
+      state.currentRound.offeredCards.length === 0
+    ) {
       return state;
     }
-    return this.revealNextOffer({ ...state, offeredCards: [] });
+    const action = state.currentRound.discardOffer(this.rules.cardOfferSize);
+    if (action.status === GameRoundActionStatus.DeckExhausted) {
+      return this.finishRound(state, action.round, 'deckExhausted');
+    }
+    return { ...state, currentRound: action.round };
   }
 
-  // 現在の手札を確定してラウンドを終了する。
+  // 現在のHandを確定してラウンドを終了する。
   standCurrentRound(state: GameState): GameState {
-    return this.finishRound(state, 'stood');
+    if (state.phase !== 'playing' || state.currentRound === null) return state;
+    return this.finishRound(state, state.currentRound, 'stood');
   }
 
   // 次ラウンドを開始し、最終ラウンド後はゲームを終了する。
   startNextRound(state: GameState): GameState {
-    if (state.phase !== 'roundFinished') return state;
-    if (state.currentRoundNumber >= this.rules.totalRounds) {
+    if (state.phase !== 'roundFinished' || state.currentRound === null) {
+      return state;
+    }
+    if (state.currentRound.roundNumber >= this.rules.totalRounds) {
       return { ...state, phase: 'gameFinished' };
     }
-    return this.createRound(state, state.currentRoundNumber + 1);
+    return this.createRound(state, state.currentRound.roundNumber + 1);
   }
 
   // 同じルールを保持した未開始状態へ戻す。
@@ -117,8 +113,8 @@ export class GameEngine {
     return color;
   }
 
-  // カード生成Policyを使い、黒ではないカードを生成する。
-  private generateCard(roundNumber: number, cardNumber: number): ColorCard {
+  // カード生成Policyを使い、黒ではないRGB加算カードを生成する。
+  private generateCard(roundNumber: number, cardNumber: number): GameCard {
     const { cardColorRange, cardColorGenerationPolicy } = this.rules;
     const id = `round-${roundNumber}-card-${cardNumber}`;
     const red = cardColorGenerationPolicy.generateChannel(
@@ -133,21 +129,21 @@ export class GameEngine {
       cardColorRange,
       this.random,
     );
-    const generatedCard = ColorCard.create(id, red, green, blue);
+    const generatedCard = GameCard.createAddColor(id, red, green, blue);
 
-    if (generatedCard instanceof ColorCard) return generatedCard;
-    if (generatedCard === ColorCardCreationFailure.Black) {
-      const nonBlackCard = ColorCard.create(id, red, green, 1);
-      if (nonBlackCard instanceof ColorCard) return nonBlackCard;
+    if (generatedCard instanceof GameCard) return generatedCard;
+    if (generatedCard === GameCardCreationFailure.Black) {
+      const nonBlackCard = GameCard.createAddColor(id, red, green, 1);
+      if (nonBlackCard instanceof GameCard) return nonBlackCard;
     }
     throw new RangeError(
       `Random generator returned an invalid card: ${generatedCard}`,
     );
   }
 
-  // 新しい初期手札と山札を生成して指定ラウンドを開始する。
+  // 新しい初期Handと山札を生成して指定ラウンドを開始する。
   private createRound(state: GameState, roundNumber: number): GameState {
-    const currentHand = new Hand(
+    const hand = new Hand(
       this.generateColor(
         this.rules.initialColorRange,
         this.rules.initialColorGenerationPolicy,
@@ -159,44 +155,55 @@ export class GameEngine {
     return {
       ...state,
       phase: 'playing',
-      currentRoundNumber: roundNumber,
-      currentHand,
-      offeredCards: deck.slice(0, this.rules.cardOfferSize),
-      remainingDeck: deck.slice(this.rules.cardOfferSize),
+      currentRound: new GameRound({
+        roundNumber,
+        hand,
+        offeredCards: deck.slice(0, this.rules.cardOfferSize),
+        remainingDeck: deck.slice(this.rules.cardOfferSize),
+      }),
     };
   }
 
-  // 通常終了したラウンドの色とスコアを確定する。
+  // 通常終了したラウンドのHandとスコアを確定する。
   private finishRound(
     state: GameState,
+    round: GameRound,
     reason: NormalRoundEndReason,
   ): GameState {
-    if (state.phase !== 'playing' || state.currentHand === null) return state;
     const result: RoundResult = {
-      roundNumber: state.currentRoundNumber,
-      finalHand: state.currentHand,
+      roundNumber: round.roundNumber,
+      finalHand: round.hand,
       burstHand: null,
       burstChannels: null,
-      score: this.rules.scorePolicy.calculate(state.currentHand),
+      score: this.rules.scorePolicy.calculate(round.hand),
       endReason: reason,
     };
     return {
       ...state,
       phase: 'roundFinished',
+      currentRound: round,
       roundResults: [...state.roundResults, result],
     };
   }
 
-  // バースト直前と加算後の手札を保存して0点で確定する。
+  // バースト直前と効果適用後のHandを保存して0点で確定する。
   private finishBurstRound(
     state: GameState,
+    round: GameRound,
     burstHand: Hand,
-    burstChannels: BurstChannels,
   ): GameState {
-    if (state.phase !== 'playing' || state.currentHand === null) return state;
+    const [firstBurstChannel, ...otherBurstChannels] =
+      burstHand.clampedChannels;
+    if (firstBurstChannel === undefined) {
+      throw new RangeError('A burst must contain at least one color channel.');
+    }
+    const burstChannels: BurstChannels = [
+      firstBurstChannel,
+      ...otherBurstChannels,
+    ];
     const result: RoundResult = {
-      roundNumber: state.currentRoundNumber,
-      finalHand: state.currentHand,
+      roundNumber: round.roundNumber,
+      finalHand: round.hand,
       burstHand,
       burstChannels,
       score: 0,
@@ -205,19 +212,8 @@ export class GameEngine {
     return {
       ...state,
       phase: 'roundFinished',
+      currentRound: round,
       roundResults: [...state.roundResults, result],
-    };
-  }
-
-  // 山札からルール指定枚数を公開し、空ならラウンドを確定する。
-  private revealNextOffer(state: GameState): GameState {
-    if (state.remainingDeck.length === 0) {
-      return this.finishRound({ ...state, offeredCards: [] }, 'deckExhausted');
-    }
-    return {
-      ...state,
-      offeredCards: state.remainingDeck.slice(0, this.rules.cardOfferSize),
-      remainingDeck: state.remainingDeck.slice(this.rules.cardOfferSize),
     };
   }
 }

@@ -163,16 +163,22 @@ type RgbColor = {
 
 初期色が暗めになるよう範囲を制限し、カードを複数回取る余地を確保する。
 
-## 4.4 色カード
+## 4.4 ゲームカード
 
-カードには、RGBそれぞれの加算値を持たせる。
+カードは表示用の色と、使用時に適用する効果を持つ。現在の通常カードは、
+RGBそれぞれの加算値を `AddColorEffect` として保持する。
 
 ```ts
-type ColorCard = {
-  id: string;
-  color: RgbColor;
-};
+new GameCard({
+  id,
+  displayColor,
+  effect: new AddColorEffect(amount),
+});
 ```
+
+`GameRound` が選択されたカードの効果を現在の `Hand` へ適用し、
+未選択候補の破棄と次候補の公開を行う。カード種別を増やす際は、
+カード種別ごとの分岐を増やすのではなく `CardEffect` の実装を追加する。
 
 各成分は以下の範囲からランダム生成する。
 
@@ -580,30 +586,24 @@ src/
 │   └── theme.ts
 │
 ├── domain/
-│   ├── entities/
-│   │   ├── RgbColor.ts
-│   │   ├── ColorCard.ts
-│   │   ├── Round.ts
-│   │   └── Game.ts
-│   │
-│   ├── services/
-│   │   ├── colorCalculator.ts
-│   │   ├── scoreCalculator.ts
-│   │   └── burstDetector.ts
-│   │
-│   └── repositories/
+│   ├── models/
+│   │   ├── card/
+│   │   │   ├── effects/
+│   │   │   │   ├── AddColorEffect.ts
+│   │   │   │   └── CardEffect.ts
+│   │   │   └── GameCard.ts
+│   │   ├── color/
+│   │   ├── game/
+│   │   │   ├── Game.ts
+│   │   │   ├── GameRound.ts
+│   │   │   └── Round.ts
+│   │   ├── hand/
+│   │   │   └── Hand.ts
+│   │   └── rules/
+│   ├── repositories/
 │       └── RandomGenerator.ts
-│
-├── application/
-│   ├── usecases/
-│   │   ├── StartGame.ts
-│   │   ├── StartNextRound.ts
-│   │   ├── AcceptCard.ts
-│   │   ├── DiscardCard.ts
-│   │   └── StandRound.ts
-│   │
-│   └── models/
-│       └── GameState.ts
+│   └── usecases/
+│       └── GameEngine.ts
 │
 ├── infrastructure/
 │   └── random/
@@ -612,7 +612,7 @@ src/
 ├── presentation/
 │   ├── components/
 │   │   ├── ColorPanel.tsx
-│   │   ├── ColorCardView.tsx
+│   │   ├── GameCardView.tsx
 │   │   ├── GameStatus.tsx
 │   │   ├── ActionButtons.tsx
 │   │   ├── RoundResult.tsx
@@ -643,15 +643,12 @@ Domain層には以下を含める。
 ### エンティティ
 
 - RGB色
-- 色カード
+- ゲームカードとカード効果
 - ラウンド
 - ゲーム
 
-### ドメインサービス
-
-- 色の加算
-- バースト判定
-- スコア計算
+色の加算とバースト判定は `Hand`、カード適用と候補進行は
+`GameRound`、ゲーム全体の遷移は `GameEngine` が担う。
 
 ### 制約
 
@@ -734,11 +731,15 @@ type RoundResult = {
 
 type GameState = {
   phase: GamePhase;
-  currentRoundNumber: number;
-  currentColor: RgbColor | null;
-  offeredCards: ColorCard[];
-  remainingDeck: ColorCard[];
+  currentRound: GameRound | null;
   roundResults: RoundResult[];
+};
+
+type GameRound = {
+  roundNumber: number;
+  hand: Hand;
+  offeredCards: GameCard[];
+  remainingDeck: GameCard[];
 };
 ```
 

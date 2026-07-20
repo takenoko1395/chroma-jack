@@ -1,7 +1,6 @@
 import { Color } from '../color/Color';
 import { COLOR_CHANNELS, type ColorChannel } from '../color/ColorChannel';
 import type { OverflowPolicy } from '../rules/OverflowPolicy';
-import type { ColorCard } from './ColorCard';
 
 // カード加算後にラウンドを継続できるかを示す。
 export enum HandAdditionStatus {
@@ -36,9 +35,9 @@ export class Hand {
     return new Set(this.clampedChannelSet);
   }
 
-  // Policyに従ってカードを加算し、継続またはバースト結果を返す。
-  add(card: ColorCard, overflowPolicy: OverflowPolicy): HandAddition {
-    const attemptedColor = this.color.add(card.color);
+  // Policyに従って色を加算し、継続またはバースト結果を返す。
+  addColor(amount: Color, overflowPolicy: OverflowPolicy): HandAddition {
+    const attemptedColor = this.color.add(amount);
     const overflowedChannels = COLOR_CHANNELS.filter(
       (channel) => attemptedColor[channel] > Hand.CHANNEL_LIMIT,
     );

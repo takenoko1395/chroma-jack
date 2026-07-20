@@ -1,6 +1,5 @@
-import type { ColorCard } from '../hand/ColorCard';
-import type { Hand } from '../hand/Hand';
 import type { RoundResult } from './Round';
+import type { GameRound } from './GameRound';
 
 // ゲーム全体が現在どの進行段階にあるかを示す。
 export type GamePhase =
@@ -13,14 +12,8 @@ export type GamePhase =
 export type GameState = Readonly<{
   // ゲームの進行段階を示す。
   phase: GamePhase;
-  // 現在のラウンド番号。1から始まる。
-  currentRoundNumber: number;
-  // 現在のラウンドで使用中の手札。ラウンド開始前はnull。
-  currentHand: Hand | null;
-  // 現在のラウンドで提示中のカード。ラウンド開始前は空配列。
-  offeredCards: readonly ColorCard[];
-  // 現在のラウンドで残っている山札。ラウンド開始前は空配列。
-  remainingDeck: readonly ColorCard[];
+  // 現在進行中または直前に終了したラウンド。ゲーム開始前はnull。
+  currentRound: GameRound | null;
   // 現在までに終了したラウンドの結果。ラウンド開始前は空配列。
   roundResults: readonly RoundResult[];
 }>;

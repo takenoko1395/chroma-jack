@@ -13,13 +13,13 @@ export enum ColorCardCreationFailure {
 // 山札に入り、手札へ加算できる色と識別子を保持するモデル。
 export class ColorCard {
   static readonly MINIMUM_CHANNEL = 0;
-  static readonly MAXIMUM_CHANNEL = 63;
+  static readonly MAXIMUM_CHANNEL = 160;
 
   // 検証済みのIDと色を持つカードを組み立てる。
   private constructor(
     readonly id: string,
     readonly color: Color,
-  ) {}
+  ) { }
 
   // IDと色成分を検証し、カードまたは生成失敗理由を返す。
   static create(

@@ -98,13 +98,13 @@ export class GameRules {
       totalRounds: 5,
       deckSize: 12,
       cardOfferSize: 1,
-      initialColorRange: createRange(0, 127),
+      initialColorRange: createRange(0, 20),
       cardColorRange: createRange(
         ColorCard.MINIMUM_CHANNEL,
         ColorCard.MAXIMUM_CHANNEL,
       ),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Uniform,
+        ColorGenerationTrend.Lower,
       ),
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
@@ -127,13 +127,13 @@ export class GameRules {
         ColorCard.MAXIMUM_CHANNEL,
       ),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Uniform,
+        ColorGenerationTrend.Lower,
       ),
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Higher,
       ),
       overflowPolicy: OverflowPolicy.clampAndContinue(1),
-      scorePolicy: new ScorePolicy(1000, 400),
+      scorePolicy: new ScorePolicy(1000, 200),
     });
   }
 }

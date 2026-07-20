@@ -5,6 +5,7 @@ type ActionButtonsProps = {
   onAccept: () => void;
   onDiscard: () => void;
   onStand: () => void;
+  canAccept: boolean;
 };
 
 // 公開カードに対する加算・破棄・停止操作をまとめて表示する。
@@ -12,6 +13,7 @@ export function ActionButtons({
   onAccept,
   onDiscard,
   onStand,
+  canAccept,
 }: ActionButtonsProps) {
   const { t } = useTranslation();
   return (
@@ -20,6 +22,7 @@ export function ActionButtons({
         variant="contained"
         size="large"
         onClick={onAccept}
+        disabled={!canAccept}
         sx={{ flex: 1 }}
       >
         {t('game.accept')}

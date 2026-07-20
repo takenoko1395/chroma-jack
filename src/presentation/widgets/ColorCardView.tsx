@@ -1,35 +1,41 @@
-import { Box, Typography } from '@mui/material';
-import { useTranslation } from 'react-i18next';
+import { Box, ButtonBase, Typography } from '@mui/material';
 import type { ColorCard } from '../../domain/models/hand/ColorCard';
 
 type ColorCardViewProps = {
   card: ColorCard;
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
 };
 
-// 現在公開されている色カードを数値なしの色面として表示する。
-export function ColorCardView({ card }: ColorCardViewProps) {
-  const { t } = useTranslation();
+// 公開候補の色を、数値を見せずに選択できるカードとして表示する。
+export function ColorCardView({
+  card,
+  label,
+  selected,
+  onSelect,
+}: ColorCardViewProps) {
   const { red, green, blue } = card.color;
   return (
-    <Box sx={{ flex: 1, minWidth: 0, maxWidth: 320 }}>
-      <Typography
-        component="h2"
-        variant="overline"
-        sx={{ color: 'text.secondary', letterSpacing: '0.14em' }}
-      >
-        {t('game.nextColor')}
+    <Box sx={{ minWidth: 0 }}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
       </Typography>
-      <Box
-        role="img"
-        aria-label={t('game.nextDrawnColor')}
+      <ButtonBase
+        aria-label={label}
+        aria-pressed={selected}
+        onClick={onSelect}
         sx={{
           mt: 0.5,
           width: '100%',
-          height: { xs: 140, sm: 240, md: 280 },
+          height: { xs: 112, sm: 160, md: 190 },
           bgcolor: `rgb(${red}, ${green}, ${blue})`,
-          border: '1px solid rgba(0, 0, 0, 0.2)',
+          border: '3px solid',
+          borderColor: selected ? 'primary.main' : 'rgba(0, 0, 0, 0.2)',
           borderRadius: 3,
-          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.07)',
+          boxShadow: selected
+            ? '0 0 0 3px rgba(37, 99, 235, 0.2)'
+            : '0 12px 32px rgba(0, 0, 0, 0.07)',
         }}
       />
     </Box>

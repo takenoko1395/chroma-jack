@@ -34,7 +34,9 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Start game' }));
     expect(screen.getByLabelText('Current color')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Add selected color' }),
+    ).toBeInTheDocument();
   });
 
   it('Classicを初期選択し、開始前にClamp Challengeへ変更できる', async () => {
@@ -88,15 +90,43 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
 
     expect(screen.getByLabelText('現在の色')).toBeInTheDocument();
-    expect(screen.getByLabelText('次に引いた色')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '加える' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '捨てる' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '候補 1' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '選んだ色を加える' }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: '候補をすべて捨てる' }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'ここで止める' }),
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/#[0-9a-f]{6}/i);
     expect(document.body.textContent).not.toMatch(/RGB\s*\(/i);
     expect(screen.queryByLabelText(/色の数値/)).not.toBeInTheDocument();
+  });
+
+  it('Clamp Challengeでは3枚から選んだ1枚を加える', async () => {
+    const user = userEvent.setup();
+    renderApp();
+    const rulesSelect = screen.getByRole('combobox', {
+      name: 'ゲームルール',
+    });
+    await user.click(rulesSelect);
+    await user.click(screen.getByRole('option', { name: 'Clamp Challenge' }));
+    await user.click(screen.getByRole('button', { name: 'ゲームを始める' }));
+
+    const acceptButton = screen.getByRole('button', {
+      name: '選んだ色を加える',
+    });
+    expect(screen.getByRole('button', { name: '候補 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '候補 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '候補 3' })).toBeInTheDocument();
+    expect(acceptButton).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: '候補 2' }));
+    expect(acceptButton).toBeEnabled();
+    await user.click(acceptButton);
+    expect(screen.getByText('21枚')).toBeInTheDocument();
   });
 
   it('途中で止めた場合は未使用カードの残数を保つ', async () => {

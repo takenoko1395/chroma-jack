@@ -8,7 +8,8 @@ describe('GameRules', () => {
 
     expect(rules.id).toBe('clamp-challenge');
     expect(rules.totalRounds).toBe(5);
-    expect(rules.deckSize).toBe(12);
+    expect(rules.deckSize).toBe(24);
+    expect(rules.cardOfferSize).toBe(3);
     expect(rules.initialColorRange.maximum).toBe(159);
     expect(rules.cardColorRange.maximum).toBe(63);
     expect(rules.overflowPolicy.allowedBurstColors).toBe(1);
@@ -27,8 +28,29 @@ describe('GameRules', () => {
           id: 'invalid',
           totalRounds: base.totalRounds,
           deckSize: base.deckSize,
+          cardOfferSize: base.cardOfferSize,
           initialColorRange: base.initialColorRange,
           cardColorRange: blackOnlyRange,
+          initialColorGenerationPolicy: base.initialColorGenerationPolicy,
+          cardColorGenerationPolicy: base.cardColorGenerationPolicy,
+          overflowPolicy: base.overflowPolicy,
+          scorePolicy: base.scorePolicy,
+        }),
+    ).toThrow(RangeError);
+  });
+
+  it('候補枚数が山札枚数を超える設定を拒否する', () => {
+    const base = GameRules.classic();
+
+    expect(
+      () =>
+        new GameRules({
+          id: 'invalid-offer-size',
+          totalRounds: base.totalRounds,
+          deckSize: base.deckSize,
+          cardOfferSize: base.deckSize + 1,
+          initialColorRange: base.initialColorRange,
+          cardColorRange: base.cardColorRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
           overflowPolicy: base.overflowPolicy,

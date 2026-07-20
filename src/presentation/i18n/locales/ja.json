@@ -9,11 +9,11 @@
   "rules": {
     "classic": {
       "label": "Classic",
-      "description": "色を加えすぎると、その時点でラウンド終了です。"
+      "description": "候補は1枚ずつ公開され、色を加えすぎるとその時点でラウンド終了です。"
     },
     "clampChallenge": {
       "label": "Clamp Challenge",
-      "description": "1色までバーストしても上限で止まり、次の色のバーストでラウンド終了。初期色とカードは明るめに出やすく、バーストした色があると得点上限が下がります。"
+      "description": "3枚の候補から1枚を選べます。1色までバーストしても上限で止まり、次の色のバーストでラウンド終了。初期色とカードは明るめに出やすく、バーストした色があると得点上限が下がります。"
     },
     "custom": {
       "description": "このルール固有の設定でプレイします。"
@@ -26,12 +26,12 @@
     "points": "{{value}}点",
     "cards": "{{count}}枚",
     "currentColor": "現在の色",
-    "nextColor": "次の色",
-    "nextDrawnColor": "次に引いた色",
-    "statusAnnouncement": "現在の色と次の色を確認してください。ラウンド{{round}}、残り{{cards}}枚です",
+    "offeredColors": "候補の色",
+    "offeredColor": "候補 {{number}}",
+    "statusAnnouncement": "現在の色と候補の色を確認してください。ラウンド{{round}}、残り{{cards}}枚です",
     "continuedBurst": "{{count}}色バースト・上限の色で続行します",
-    "accept": "加える",
-    "discard": "捨てる",
+    "accept": "選んだ色を加える",
+    "discard": "候補をすべて捨てる",
     "stand": "ここで止める"
   },
   "roundResult": {

@@ -28,7 +28,7 @@ export class GameEngine {
       phase: 'notStarted',
       currentRoundNumber: 0,
       currentHand: null,
-      currentCard: null,
+      offeredCards: [],
       remainingDeck: [],
       roundResults: [],
     };
@@ -39,18 +39,16 @@ export class GameEngine {
     return this.createRound(this.createInitialState(), 1);
   }
 
-  // 公開カードを手札へ加え、ルールに従って次状態へ進める。
-  acceptCurrentCard(state: GameState): GameState {
-    if (
-      state.phase !== 'playing' ||
-      state.currentHand === null ||
-      state.currentCard === null
-    ) {
+  // 公開候補からIDで選んだ1枚だけを手札へ加え、次の候補へ進める。
+  acceptOfferedCard(state: GameState, cardId: string): GameState {
+    if (state.phase !== 'playing' || state.currentHand === null) {
       return state;
     }
+    const selectedCard = state.offeredCards.find((card) => card.id === cardId);
+    if (selectedCard === undefined) return state;
 
     const addition = state.currentHand.add(
-      state.currentCard,
+      selectedCard,
       this.rules.overflowPolicy,
     );
     if (addition.status === HandAdditionStatus.Burst) {
@@ -62,18 +60,24 @@ export class GameEngine {
         );
       }
       return this.finishBurstRound(
-        { ...state, currentCard: null },
+        { ...state, offeredCards: [] },
         addition.hand,
         [firstBurstChannel, ...otherBurstChannels],
       );
     }
-    return this.revealNextCard({ ...state, currentHand: addition.hand });
+    return this.revealNextOffer({
+      ...state,
+      currentHand: addition.hand,
+      offeredCards: [],
+    });
   }
 
-  // 公開カードを加えずに破棄し、次のカードへ進める。
-  discardCurrentCard(state: GameState): GameState {
-    if (state.phase !== 'playing' || state.currentCard === null) return state;
-    return this.revealNextCard(state);
+  // 公開中の候補をすべて破棄し、次の候補を公開する。
+  discardOffer(state: GameState): GameState {
+    if (state.phase !== 'playing' || state.offeredCards.length === 0) {
+      return state;
+    }
+    return this.revealNextOffer({ ...state, offeredCards: [] });
   }
 
   // 現在の手札を確定してラウンドを終了する。
@@ -157,8 +161,8 @@ export class GameEngine {
       phase: 'playing',
       currentRoundNumber: roundNumber,
       currentHand,
-      currentCard: deck[0] ?? null,
-      remainingDeck: deck.slice(1),
+      offeredCards: deck.slice(0, this.rules.cardOfferSize),
+      remainingDeck: deck.slice(this.rules.cardOfferSize),
     };
   }
 
@@ -205,12 +209,15 @@ export class GameEngine {
     };
   }
 
-  // 山札から次のカードを公開し、空ならラウンドを確定する。
-  private revealNextCard(state: GameState): GameState {
-    const [nextCard, ...remainingDeck] = state.remainingDeck;
-    if (nextCard === undefined) {
-      return this.finishRound({ ...state, currentCard: null }, 'deckExhausted');
+  // 山札からルール指定枚数を公開し、空ならラウンドを確定する。
+  private revealNextOffer(state: GameState): GameState {
+    if (state.remainingDeck.length === 0) {
+      return this.finishRound({ ...state, offeredCards: [] }, 'deckExhausted');
     }
-    return { ...state, currentCard: nextCard, remainingDeck };
+    return {
+      ...state,
+      offeredCards: state.remainingDeck.slice(0, this.rules.cardOfferSize),
+      remainingDeck: state.remainingDeck.slice(this.rules.cardOfferSize),
+    };
   }
 }

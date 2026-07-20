@@ -19,7 +19,7 @@ function createContinuedGame(): GameState {
     phase: 'playing',
     currentRoundNumber: 1,
     currentHand: new Hand(color, new Set([ColorChannel.Red])),
-    currentCard: card,
+    offeredCards: [card],
     remainingDeck: [],
     roundResults: [],
   };

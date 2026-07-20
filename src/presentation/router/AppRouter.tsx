@@ -50,7 +50,7 @@ export function AppRouter({ initialRules = CLASSIC_RULES }: AppRouterProps) {
     maximumScore,
     beginGame,
     acceptCard,
-    discardCard,
+    discardOffer,
     standRound,
     advanceRound,
     goToTitle,
@@ -84,7 +84,7 @@ export function AppRouter({ initialRules = CLASSIC_RULES }: AppRouterProps) {
       totalRounds={totalRounds}
       totalScore={totalScore}
       onAccept={acceptCard}
-      onDiscard={discardCard}
+      onDiscard={discardOffer}
       onStand={standRound}
       onContinue={advanceRound}
     />

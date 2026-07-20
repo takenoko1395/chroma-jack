@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { GameState } from '../../domain/models/game/Game';
 import { ActionButtons } from '../widgets/ActionButtons';
-import { ColorCardView } from '../widgets/ColorCardView';
+import { CardOffer } from '../widgets/CardOffer';
 import { ColorPanel } from '../widgets/ColorPanel';
 import { GameStatus } from '../widgets/GameStatus';
 import { RoundResult } from '../widgets/RoundResult';
@@ -11,7 +12,7 @@ type GamePageProps = {
   game: GameState;
   totalRounds: number;
   totalScore: number;
-  onAccept: () => void;
+  onAccept: (cardId: string) => void;
   onDiscard: () => void;
   onStand: () => void;
   onContinue: () => void;
@@ -29,6 +30,15 @@ export function GamePage({
 }: GamePageProps) {
   const { t } = useTranslation();
   const result = game.roundResults.at(-1);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const activeSelectedCardId = game.offeredCards.some(
+    (card) => card.id === selectedCardId,
+  )
+    ? selectedCardId
+    : game.offeredCards.length === 1
+      ? (game.offeredCards[0]?.id ?? null)
+      : null;
+  const cardsRemaining = game.remainingDeck.length + game.offeredCards.length;
 
   return (
     <Container maxWidth="lg" component="main" sx={{ py: { xs: 2.5, sm: 4 } }}>
@@ -36,17 +46,16 @@ export function GamePage({
         currentRound={game.currentRoundNumber}
         totalRounds={totalRounds}
         totalScore={totalScore}
-        cardsRemaining={game.remainingDeck.length + (game.currentCard ? 1 : 0)}
+        cardsRemaining={cardsRemaining}
       />
-      <Stack
-        direction="row"
-        alignItems="flex-start"
-        gap={{ xs: 1.5, sm: 3, md: 4 }}
-        sx={{ mt: 3 }}
-      >
+      <Stack sx={{ mt: 3 }}>
         {game.currentHand && <ColorPanel color={game.currentHand.color} />}
-        {game.phase === 'playing' && game.currentCard && (
-          <ColorCardView card={game.currentCard} />
+        {game.phase === 'playing' && game.offeredCards.length > 0 && (
+          <CardOffer
+            cards={game.offeredCards}
+            selectedCardId={activeSelectedCardId}
+            onSelect={setSelectedCardId}
+          />
         )}
       </Stack>
       <Typography
@@ -65,7 +74,7 @@ export function GamePage({
         {game.phase === 'playing'
           ? t('game.statusAnnouncement', {
               round: game.currentRoundNumber,
-              cards: game.remainingDeck.length + (game.currentCard ? 1 : 0),
+              cards: cardsRemaining,
             })
           : ''}
       </Typography>
@@ -80,9 +89,14 @@ export function GamePage({
               </Typography>
             )}
             <ActionButtons
-              onAccept={onAccept}
+              onAccept={() => {
+                if (activeSelectedCardId !== null) {
+                  onAccept(activeSelectedCardId);
+                }
+              }}
               onDiscard={onDiscard}
               onStand={onStand}
+              canAccept={activeSelectedCardId !== null}
             />
           </>
         )}

@@ -22,6 +22,7 @@ export type GameRulesArgs = Readonly<{
   id: string;
   totalRounds: number;
   deckSize: number;
+  cardOfferSize: number;
   initialColorRange: IntegerRange;
   cardColorRange: IntegerRange;
   initialColorGenerationPolicy: ColorGenerationPolicy;
@@ -35,6 +36,7 @@ export class GameRules {
   readonly id: string;
   readonly totalRounds: number;
   readonly deckSize: number;
+  readonly cardOfferSize: number;
   readonly initialColorRange: IntegerRange;
   readonly cardColorRange: IntegerRange;
   readonly initialColorGenerationPolicy: ColorGenerationPolicy;
@@ -51,6 +53,15 @@ export class GameRules {
     }
     if (!Number.isSafeInteger(args.deckSize) || args.deckSize <= 0) {
       throw new RangeError('Deck size must be a positive integer.');
+    }
+    if (
+      !Number.isSafeInteger(args.cardOfferSize) ||
+      args.cardOfferSize <= 0 ||
+      args.cardOfferSize > args.deckSize
+    ) {
+      throw new RangeError(
+        'Card offer size must be a positive integer within the deck size.',
+      );
     }
     if (
       args.initialColorRange.minimum < 0 ||
@@ -71,6 +82,7 @@ export class GameRules {
     this.id = args.id;
     this.totalRounds = args.totalRounds;
     this.deckSize = args.deckSize;
+    this.cardOfferSize = args.cardOfferSize;
     this.initialColorRange = args.initialColorRange;
     this.cardColorRange = args.cardColorRange;
     this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
@@ -85,6 +97,7 @@ export class GameRules {
       id: 'classic',
       totalRounds: 5,
       deckSize: 12,
+      cardOfferSize: 1,
       initialColorRange: createRange(0, 127),
       cardColorRange: createRange(
         ColorCard.MINIMUM_CHANNEL,
@@ -106,7 +119,8 @@ export class GameRules {
     return new GameRules({
       id: 'clamp-challenge',
       totalRounds: 5,
-      deckSize: 12,
+      deckSize: 24,
+      cardOfferSize: 3,
       initialColorRange: createRange(0, 159),
       cardColorRange: createRange(
         ColorCard.MINIMUM_CHANNEL,

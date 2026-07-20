@@ -21,11 +21,12 @@ export function useChromaJack(rules: GameRules) {
     setGame(engine.current.startGame());
   }, []);
   const acceptCard = useCallback(
-    () => setGame((current) => engine.current.acceptCurrentCard(current)),
+    (cardId: string) =>
+      setGame((current) => engine.current.acceptOfferedCard(current, cardId)),
     [],
   );
-  const discardCard = useCallback(
-    () => setGame((current) => engine.current.discardCurrentCard(current)),
+  const discardOffer = useCallback(
+    () => setGame((current) => engine.current.discardOffer(current)),
     [],
   );
   const standRound = useCallback(
@@ -50,7 +51,7 @@ export function useChromaJack(rules: GameRules) {
       engine.current.rules.scorePolicy.maximumScore,
     beginGame,
     acceptCard,
-    discardCard,
+    discardOffer,
     standRound,
     advanceRound,
     goToTitle,

@@ -9,11 +9,11 @@
   "rules": {
     "classic": {
       "label": "Classic",
-      "description": "The round ends as soon as any color channel bursts."
+      "description": "Cards are offered one at a time, and the round ends as soon as any color channel bursts."
     },
     "clampChallenge": {
       "label": "Clamp Challenge",
-      "description": "Continue after one color bursts; the next new burst ends the round. Initial colors and cards tend to be brighter, and bursting lowers the score ceiling."
+      "description": "Choose one of three offered cards. Continue after one color bursts; the next new burst ends the round. Initial colors and cards tend to be brighter, and bursting lowers the score ceiling."
     },
     "custom": {
       "description": "Play with this rule's custom settings."
@@ -26,12 +26,12 @@
     "points": "{{value}} pts",
     "cards": "{{count}} cards",
     "currentColor": "Current color",
-    "nextColor": "Next color",
-    "nextDrawnColor": "Next drawn color",
-    "statusAnnouncement": "Check the current and next colors. Round {{round}}, {{cards}} cards remaining.",
+    "offeredColors": "Color choices",
+    "offeredColor": "Choice {{number}}",
+    "statusAnnouncement": "Check the current color and color choices. Round {{round}}, {{cards}} cards remaining.",
     "continuedBurst": "{{count}} color burst · continuing at the limit",
-    "accept": "Add",
-    "discard": "Discard",
+    "accept": "Add selected color",
+    "discard": "Discard all choices",
     "stand": "Stand"
   },
   "roundResult": {

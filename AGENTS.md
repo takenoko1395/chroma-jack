@@ -70,14 +70,11 @@ the game remains understandable without numeric values.
 
 - Run the narrowest relevant checks after edits. If no automated checks exist,
   inspect the changed behavior and state what could not be verified.
-- After non-trivial code changes, use the `quality_reviewer` agent.
-- For UI, copy, loading, empty, error, retry, or user-flow changes, also use the
-  `user_reviewer` agent.
-- For authentication, authorization, APIs, external input, secrets, identity,
-  permissions, infrastructure, or logging-sensitive changes, also use the
-  `security_reviewer` agent.
-- Select only the review viewpoints justified by the change. Run independent
-  viewpoints in parallel when practical, then deduplicate overlapping findings.
+- Use reviewer or other sub-agents only when the user explicitly requests an agent
+  review or parallel work. Do not start `quality_reviewer`, `user_reviewer`,
+  `security_reviewer`, or any other sub-agent automatically based on the change type.
+- When the user explicitly requests multiple review viewpoints, select only those
+  justified by the change and deduplicate overlapping findings.
 - Report concrete regressions and user impact before stylistic observations.
 
 ## Safety

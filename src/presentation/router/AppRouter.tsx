@@ -10,10 +10,12 @@ import {
 } from '../rules/SelectableGameRule';
 
 const CLASSIC_RULES = GameRules.classic();
+const CMY_SUBTRACTIVE_RULES = GameRules.cmySubtractive();
 const CLAMP_CHALLENGE_RULES = GameRules.clampChallenge();
 const SPECIAL_DECK_RULES = GameRules.specialDeck();
 const BUILT_IN_RULE_OPTIONS = createBuiltInRuleOptions({
   classic: CLASSIC_RULES,
+  cmySubtractive: CMY_SUBTRACTIVE_RULES,
   clampChallenge: CLAMP_CHALLENGE_RULES,
   specialDeck: SPECIAL_DECK_RULES,
 });
@@ -26,21 +28,22 @@ type AppRouterProps = {
 export function AppRouter({ initialRules = CLASSIC_RULES }: AppRouterProps) {
   const ruleOptions = useMemo(() => {
     const options = new Map<string, SelectableGameRule>(
-      BUILT_IN_RULE_OPTIONS.map((option) => [option.rules.id, option]),
+      BUILT_IN_RULE_OPTIONS.map((option) => [option.rules.id.value, option]),
     );
-    const matchingOption = options.get(initialRules.id);
-    options.set(initialRules.id, {
+    const matchingOption = options.get(initialRules.id.value);
+    options.set(initialRules.id.value, {
       rules: initialRules,
-      labelKey: matchingOption?.labelKey ?? `rules.${initialRules.id}.label`,
+      labelKey:
+        matchingOption?.labelKey ?? `rules.${initialRules.id.value}.label`,
       descriptionKey:
         matchingOption?.descriptionKey ??
-        `rules.${initialRules.id}.description`,
+        `rules.${initialRules.id.value}.description`,
     });
     return [...options.values()];
   }, [initialRules]);
-  const [selectedRulesId, setSelectedRulesId] = useState(initialRules.id);
+  const [selectedRulesId, setSelectedRulesId] = useState(initialRules.id.value);
   const selectedRuleOption =
-    ruleOptions.find((option) => option.rules.id === selectedRulesId) ??
+    ruleOptions.find((option) => option.rules.id.value === selectedRulesId) ??
     ruleOptions[0];
   if (selectedRuleOption === undefined) {
     throw new RangeError('At least one selectable game rule is required.');
@@ -62,7 +65,7 @@ export function AppRouter({ initialRules = CLASSIC_RULES }: AppRouterProps) {
     return (
       <TitlePage
         ruleOptions={ruleOptions}
-        selectedRulesId={selectedRuleOption.rules.id}
+        selectedRulesId={selectedRuleOption.rules.id.value}
         onSelectRules={setSelectedRulesId}
         onStart={beginGame}
       />

@@ -16,6 +16,11 @@ describe('Color', () => {
     expect(Color.create(-1, 0, 0)).toBe(ColorCreationFailure.NegativeChannel);
   });
 
+  it('開始色として黒と白を生成できる', () => {
+    expect(Color.black()).toMatchObject({ red: 0, green: 0, blue: 0 });
+    expect(Color.white()).toMatchObject({ red: 255, green: 255, blue: 255 });
+  });
+
   it('加算結果を新しい色として返し、元の色を変更しない', () => {
     const first = Color.create(10, 20, 30);
     const second = Color.create(1, 2, 3);

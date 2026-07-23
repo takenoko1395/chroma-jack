@@ -8,7 +8,7 @@ export class GameScore {
   // ラウンド結果を集計してゲーム全体のスコアを生成する。
   static calculate(roundResults: readonly RoundResult[]): GameScore {
     return new GameScore(
-      roundResults.reduce((total, result) => total + result.score, 0),
+      roundResults.reduce((total, result) => total + result.score.value, 0),
     );
   }
 }

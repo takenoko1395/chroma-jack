@@ -1,63 +1,78 @@
 import { describe, expect, it } from 'vitest';
-import { IntegerRange } from '../shared/IntegerRange';
 import { GameRules } from './GameRules';
+import { ScoreTarget } from './ScorePolicy';
+import {
+  createColor,
+  createGameRuleId,
+} from '../../../test/helpers/createDomainValue';
+import { CardOfferSize } from './CardOfferSize';
 
 describe('GameRules', () => {
+  it('RGB加算は黒から白、CMY減算は白から黒を目標にする', () => {
+    const rgb = GameRules.classic();
+    const cmy = GameRules.cmySubtractive();
+
+    expect(rgb.initialColor).toMatchObject({ red: 0, green: 0, blue: 0 });
+    expect(rgb.scorePolicy.target).toBe(ScoreTarget.White);
+    expect(cmy.initialColor).toMatchObject({
+      red: 255,
+      green: 255,
+      blue: 255,
+    });
+    expect(cmy.scorePolicy.target).toBe(ScoreTarget.Black);
+  });
+
   it('オブジェクト引数から各設定を名前どおり保持する', () => {
     const rules = GameRules.clampChallenge();
 
-    expect(rules.id).toBe('clamp-challenge');
+    expect(rules.id.value).toBe('clamp-challenge');
     expect(rules.totalRounds).toBe(5);
     expect(rules.deckSize).toBe(24);
-    expect(rules.cardOfferSize).toBe(3);
-    expect(rules.initialColorRange.maximum).toBe(159);
-    expect(rules.cardColorRange.maximum).toBe(160);
+    expect(rules.cardOfferSize.value).toBe(3);
+    expect(rules.initialColor).toMatchObject({ red: 0, green: 0, blue: 0 });
+    expect(rules.colorDeckPolicy.dominantChannelRange.maximum).toBe(120);
     expect(rules.overflowPolicy.allowedBurstColors).toBe(1);
     expect(rules.scorePolicy.clampPenalty).toBe(200);
   });
 
-  it('黒以外のカードを生成できない範囲を拒否する', () => {
+  it('Handの上限を超える初期色を拒否する', () => {
     const base = GameRules.classic();
-    const blackOnlyRange = IntegerRange.create(0, 0);
-    expect(blackOnlyRange).toBeInstanceOf(IntegerRange);
-    if (!(blackOnlyRange instanceof IntegerRange)) return;
 
     expect(
       () =>
         new GameRules({
-          id: 'invalid',
-          totalRounds: base.totalRounds,
-          deckSize: base.deckSize,
-          cardOfferSize: base.cardOfferSize,
-          initialColorRange: base.initialColorRange,
-          cardColorRange: blackOnlyRange,
-          initialColorGenerationPolicy: base.initialColorGenerationPolicy,
-          cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-          cardTypeDistribution: base.cardTypeDistribution,
-          overflowPolicy: base.overflowPolicy,
-          scorePolicy: base.scorePolicy,
+          ...base,
+          id: createGameRuleId('invalid-initial-color'),
+          initialColor: createColor(256, 0, 0),
         }),
     ).toThrow(RangeError);
   });
 
   it('候補枚数が山札枚数を超える設定を拒否する', () => {
     const base = GameRules.classic();
+    const oversizedOffer = CardOfferSize.create(base.deckSize + 1);
+    expect(oversizedOffer).toBeInstanceOf(CardOfferSize);
+    if (!(oversizedOffer instanceof CardOfferSize)) return;
 
     expect(
       () =>
         new GameRules({
-          id: 'invalid-offer-size',
-          totalRounds: base.totalRounds,
-          deckSize: base.deckSize,
-          cardOfferSize: base.deckSize + 1,
-          initialColorRange: base.initialColorRange,
-          cardColorRange: base.cardColorRange,
-          initialColorGenerationPolicy: base.initialColorGenerationPolicy,
-          cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-          cardTypeDistribution: base.cardTypeDistribution,
-          overflowPolicy: base.overflowPolicy,
-          scorePolicy: base.scorePolicy,
+          ...base,
+          id: createGameRuleId('invalid-offer-size'),
+          cardOfferSize: oversizedOffer,
         }),
     ).toThrow(RangeError);
+  });
+
+  it('3で割り切れない山札枚数も許可する', () => {
+    const base = GameRules.classic();
+
+    const rules = new GameRules({
+      ...base,
+      id: createGameRuleId('ten-card-deck'),
+      deckSize: 10,
+    });
+
+    expect(rules.deckSize).toBe(10);
   });
 });

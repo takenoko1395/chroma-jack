@@ -5,16 +5,18 @@ import type { AdjustBrightnessEffect } from './AdjustBrightnessEffect';
 import type { AdjustColorEffect } from './AdjustColorEffect';
 import type { AdjustSaturationEffect } from './AdjustSaturationEffect';
 import type {
-  ContinueRoundEffect,
   PreventBurstEffect,
   RevealColorValuesEffect,
 } from './RoundModifierEffects';
 import type { SwapColorChannelsEffect } from './SwapColorChannelsEffect';
+import type { SubtractColorEffect } from './SubtractColorEffect';
 
 // カード効果の種類を示し、実行処理と表示変換の判別子として使用する。
 export enum CardEffectKind {
   // RGB値を加算する通常効果。
   AddColor = 'addColor',
+  // RGB値を減算する通常効果。PresentationではCMY色として表現できる。
+  SubtractColor = 'subtractColor',
   // RGBの一部を増減する効果。
   AdjustChannels = 'adjustChannels',
   // 2つのRGB成分を交換する効果。
@@ -23,8 +25,6 @@ export enum CardEffectKind {
   AdjustSaturation = 'adjustSaturation',
   // 明度を操作する効果。
   AdjustBrightness = 'adjustBrightness',
-  // 未選択候補を維持する効果。
-  ContinueRound = 'continueRound',
   // 現在ラウンドのRGB数値表示を解禁する効果。
   RevealColorValues = 'revealColorValues',
   // 次の終了バーストを1回防止する効果。
@@ -45,7 +45,6 @@ export type CardEffectResult = Readonly<{
   usedBurstPrevention: boolean;
   revealColorValues: boolean;
   grantBurstPrevention: boolean;
-  preserveUnselectedCards: boolean;
 }>;
 
 // すべてのカード効果が実装する実行契約。
@@ -57,11 +56,11 @@ export interface CardEffectContract {
 // 実装済みカード効果をkindで型安全に判別できるUnion。
 export type CardEffect =
   | AddColorEffect
+  | SubtractColorEffect
   | AdjustColorEffect
   | SwapColorChannelsEffect
   | AdjustSaturationEffect
   | AdjustBrightnessEffect
-  | ContinueRoundEffect
   | RevealColorValuesEffect
   | PreventBurstEffect;
 
@@ -77,6 +76,5 @@ export function createHandEffectResult(
     usedBurstPrevention,
     revealColorValues: false,
     grantBurstPrevention: false,
-    preserveUnselectedCards: false,
   };
 }

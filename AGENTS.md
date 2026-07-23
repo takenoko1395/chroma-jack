@@ -3,12 +3,12 @@
 ## Project overview
 
 `chroma-jack` is a game prototype in which players judge colors visually and try to
-move the current color toward white. Players draw color cards and choose whether to
-add or discard them; exceeding the limit of any RGB component causes a burst.
+move the current color toward a rule-specific target. Players draw color cards and
+choose whether to apply or discard them; crossing an RGB boundary causes a burst.
 
 The prototype should validate whether color-only decisions are enjoyable, whether
-approaching white feels rewarding, whether bursting creates tension, and whether
-the game remains understandable without numeric values.
+approaching the target feels rewarding, whether bursting creates tension, and
+whether the game remains understandable without numeric values.
 
 ## Sources of truth
 
@@ -31,6 +31,9 @@ the game remains understandable without numeric values.
   environment-specific endpoints out of source code.
 - Follow the architecture and conventions already established by the project. When
   introducing a new convention, document the reason and avoid premature abstraction.
+- Document gameplay policies, intent, and stable constraints without duplicating
+  tunable parameters from source code. Keep frequently adjusted ranges, counts,
+  weights, and other balancing values in code and tests as the single source of truth.
 - Separate state transitions and side effects from rendering when the selected UI
   framework supports that separation.
 - Split UI components by reason to change, not merely by appearance. Prefer
@@ -46,6 +49,14 @@ the game remains understandable without numeric values.
 
 - Represent validated domain values with value objects instead of passing raw
   primitives and repeating validation at call sites.
+- Do not pass raw primitives across domain model, use-case, or gateway boundaries
+  when the value has a domain meaning or invariant. Convert raw input to a value
+  object at the system boundary, then pass the validated object internally.
+- Constructors and factories that create a value object are the allowed boundary
+  for its raw input. Local loop indexes and short-lived calculation intermediates
+  do not require value objects when they never cross an object boundary.
+- Use distinct value-object types for identifiers from different domains, such as
+  card IDs and rule IDs, rather than a generic interchangeable ID wrapper.
 - Avoid project-specific `Error` classes and generic Rust-inspired `Result<T, E>`
   abstractions. Represent expected validation failures and business outcomes with
   small, domain-specific enums and discriminated unions.
@@ -54,8 +65,7 @@ the game remains understandable without numeric values.
 - Put business logic on the domain model that owns the rule. Do not add standalone
   domain functions when the behavior naturally belongs to a model method.
 - A hand owns card addition and burst decisions. Preserve the color produced by a
-  bursting addition in the domain state so it can be inspected later, even when the
-  current UI intentionally continues to show the pre-burst color.
+  bursting addition in the domain state so it can be inspected and displayed later.
 - Organize domain models into cohesive folders as complexity grows. Prefer folders
   such as `color`, `hand`, `game`, and `shared`, while adjusting granularity to the
   actual responsibilities rather than enforcing a fixed depth.

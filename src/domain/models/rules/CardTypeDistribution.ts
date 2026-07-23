@@ -1,5 +1,5 @@
 import { CardEffectKind } from '../card/effects/CardEffect';
-import type { RandomGenerator } from '../../repositories/RandomGenerator';
+import type { RandomSource } from '../../usecases/gateway/RandomSource';
 import { IntegerRange } from '../shared/IntegerRange';
 
 // カード種類ごとの相対的な出現率を表す設定値。
@@ -41,12 +41,10 @@ export class CardTypeDistribution {
   }
 
   // ウェイトに従ってカード種類を1つ選択する。
-  choose(random: RandomGenerator): CardEffectKind {
+  choose(random: RandomSource): CardEffectKind {
     if (this.enabledKinds.length === 1)
       return this.enabledKinds[0] as CardEffectKind;
     const range = IntegerRange.create(1, this.totalWeight);
-    if (!(range instanceof IntegerRange))
-      throw new RangeError(`Invalid card weight range: ${range}`);
     let roll = random.nextInteger(range);
     for (const kind of this.enabledKinds) {
       roll -= this.weights[kind];
@@ -59,6 +57,13 @@ export class CardTypeDistribution {
   static addColorOnly(): CardTypeDistribution {
     return new CardTypeDistribution(createCardTypeWeights({ addColor: 100 }));
   }
+
+  // 通常CMY減算カードだけが出現する分布を生成する。
+  static subtractColorOnly(): CardTypeDistribution {
+    return new CardTypeDistribution(
+      createCardTypeWeights({ subtractColor: 100 }),
+    );
+  }
 }
 
 // 未指定種類を0としてカード出現率一式を生成する。
@@ -67,6 +72,7 @@ export function createCardTypeWeights(
 ): CardTypeWeights {
   return {
     [CardEffectKind.AddColor]: weights[CardEffectKind.AddColor] ?? 0,
+    [CardEffectKind.SubtractColor]: weights[CardEffectKind.SubtractColor] ?? 0,
     [CardEffectKind.AdjustChannels]:
       weights[CardEffectKind.AdjustChannels] ?? 0,
     [CardEffectKind.SwapChannels]: weights[CardEffectKind.SwapChannels] ?? 0,
@@ -74,7 +80,6 @@ export function createCardTypeWeights(
       weights[CardEffectKind.AdjustSaturation] ?? 0,
     [CardEffectKind.AdjustBrightness]:
       weights[CardEffectKind.AdjustBrightness] ?? 0,
-    [CardEffectKind.ContinueRound]: weights[CardEffectKind.ContinueRound] ?? 0,
     [CardEffectKind.RevealColorValues]:
       weights[CardEffectKind.RevealColorValues] ?? 0,
     [CardEffectKind.PreventBurst]: weights[CardEffectKind.PreventBurst] ?? 0,

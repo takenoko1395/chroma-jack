@@ -1,5 +1,7 @@
 import type { Hand } from '../hand/Hand';
 import type { ColorChannel } from '../color/ColorChannel';
+import type { RoundNumber } from './RoundNumber';
+import type { RoundScore } from './RoundScore';
 
 // バースト結果に最低1つの色成分が含まれることを保証する配列。
 export type BurstChannels = readonly [ColorChannel, ...ColorChannel[]];
@@ -11,9 +13,9 @@ export type RoundEndReason = NormalRoundEndReason | 'burst';
 
 // すべてのラウンド結果に共通する確定情報。
 type RoundResultBase = Readonly<{
-  roundNumber: number;
+  roundNumber: RoundNumber;
   finalHand: Hand;
-  score: number;
+  score: RoundScore;
 }>;
 
 // 通常終了または山札切れで確定したラウンド結果。
@@ -30,7 +32,6 @@ export type BurstRoundResult = RoundResultBase &
     endReason: 'burst';
     burstHand: Hand;
     burstChannels: BurstChannels;
-    score: 0;
   }>;
 
 // 終了理由によって必要な情報を型で保証するラウンド結果。

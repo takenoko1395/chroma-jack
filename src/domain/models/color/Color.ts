@@ -38,6 +38,16 @@ export class Color {
     return new Color({ red, green, blue });
   }
 
+  // RGB加算ルールの開始色となる黒を返す。
+  static black(): Color {
+    return new Color({ red: 0, green: 0, blue: 0 });
+  }
+
+  // CMY減算ルールの開始色となる白を返す。
+  static white(): Color {
+    return new Color({ red: 255, green: 255, blue: 255 });
+  }
+
   // 2色の各成分を加算した新しい色を返す。
   add(other: Color): Color {
     const added = new Color({
@@ -49,8 +59,26 @@ export class Color {
     return added;
   }
 
+  // 各RGB成分へ同じ変換規則を適用した検証済みColorを返す。
+  mapChannels(
+    transform: (value: number, channel: ColorChannel) => number,
+  ): Color {
+    const color = Color.create(
+      transform(this.red, ColorChannel.Red),
+      transform(this.green, ColorChannel.Green),
+      transform(this.blue, ColorChannel.Blue),
+    );
+    if (!(color instanceof Color)) {
+      throw new RangeError(
+        `Color transformation violated an invariant: ${color}`,
+      );
+    }
+    return color;
+  }
+
   // すべての色成分が0かどうかを返す。
   isBlack(): boolean {
     return this.red === 0 && this.green === 0 && this.blue === 0;
   }
 }
+import { ColorChannel } from './ColorChannel';

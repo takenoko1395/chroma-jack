@@ -1,4 +1,3 @@
-import { Color } from '../../color/Color';
 import {
   createHandEffectResult,
   CardEffectKind,
@@ -35,13 +34,7 @@ export class AdjustSaturationEffect implements CardEffectContract {
           Math.round(average + ((channel - average) * this.percentage) / 100),
         ),
       );
-    const color = Color.create(
-      adjust(source.red),
-      adjust(source.green),
-      adjust(source.blue),
-    );
-    if (!(color instanceof Color))
-      throw new RangeError(`Invalid saturation color: ${color}`);
+    const color = source.mapChannels(adjust);
     const change = context.hand.changeColor(color, context.overflowPolicy);
     return createHandEffectResult(change.hand, null, false);
   }

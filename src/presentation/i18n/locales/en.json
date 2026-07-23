@@ -1,15 +1,22 @@
 {
-  "language": { "label": "Language", "ja": "日本語", "en": "English" },
+  "language": {
+    "label": "Language",
+    "ja": "日本語",
+    "en": "English"
+  },
   "title": {
-    "tagline": "Layer colors and move closer to white.",
-    "trust": "Trust the colors, not the numbers.",
+    "tagline": "Trust the colors and move toward the target.",
     "rulesLabel": "Game rules",
     "start": "Start game"
   },
   "rules": {
     "classic": {
-      "label": "Classic",
-      "description": "Cards are offered one at a time, and the round ends as soon as any color channel bursts."
+      "label": "RGB Additive",
+      "description": "Add RGB to move toward white. The round ends when any channel is pushed too far."
+    },
+    "cmySubtractive": {
+      "label": "CMY Subtractive",
+      "description": "Subtract RGB with CMY to move toward black. The round ends when any channel is pulled too far."
     },
     "clampChallenge": {
       "label": "Clamp Challenge",
@@ -17,7 +24,7 @@
     },
     "specialDeck": {
       "label": "Special Deck",
-      "description": "Choose from three cards including RGB adjustment, channel swap, saturation, brightness, offer preservation, value reveal, and burst prevention effects."
+      "description": "Choose from three cards including RGB adjustment, channel swap, saturation, brightness, value reveal, and burst prevention effects."
     },
     "custom": {
       "description": "Play with this rule's custom settings."
@@ -43,11 +50,11 @@
   },
   "cards": {
     "addColor": "Add RGB",
+    "subtractColor": "Subtract CMY",
     "adjustChannels": "Adjust RGB",
     "swapChannels": "Swap channels",
     "adjustSaturation": "Adjust saturation",
     "adjustBrightness": "Adjust brightness",
-    "continueRound": "Keep the other choices",
     "revealColorValues": "Reveal values",
     "preventBurst": "Prevent burst",
     "details": {
@@ -65,10 +72,10 @@
     "finished": "Round complete",
     "burst": "Burst",
     "burstCount": "{{count}} color burst",
-    "burstDetail": "{{count}} color channels exceeded the limit",
+    "burstDetail": "{{count}} color channels crossed the limit",
     "deckExhausted": "The deck is empty",
     "stood": "Color locked in",
-    "burstColor": "Color after the bursting addition",
+    "burstColor": "Color after the bursting card",
     "finalColor": "Final color",
     "colorValues": "Numeric values for {{label}}",
     "viewResults": "View results",

@@ -15,7 +15,13 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
       return {
         id: card.id,
         titleKey: 'cards.addColor',
-        backgroundColor: `rgb(${effect.amount.red}, ${effect.amount.green}, ${effect.amount.blue})`,
+        backgroundColor: `rgb(${effect.amount.color.red}, ${effect.amount.color.green}, ${effect.amount.color.blue})`,
+      };
+    case CardEffectKind.SubtractColor:
+      return {
+        id: card.id,
+        titleKey: 'cards.subtractColor',
+        backgroundColor: `rgb(${255 - effect.amount.color.red}, ${255 - effect.amount.color.green}, ${255 - effect.amount.color.blue})`,
       };
     case CardEffectKind.AdjustChannels: {
       const changes = Object.entries(effect.delta).filter(
@@ -82,14 +88,6 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
         backgroundColor: '#ca8a04',
         backgroundImage:
           'radial-gradient(circle at center, rgba(255,255,255,.7), transparent 55%)',
-      };
-    case CardEffectKind.ContinueRound:
-      return {
-        id: card.id,
-        titleKey: 'cards.continueRound',
-        backgroundColor: '#0369a1',
-        backgroundImage:
-          'repeating-linear-gradient(90deg, transparent 0 18px, rgba(255,255,255,.18) 18px 21px)',
       };
     case CardEffectKind.RevealColorValues:
       return {

@@ -31,7 +31,7 @@ export function TitlePage({
   const { t, i18n } = useTranslation();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const selectedRule =
-    ruleOptions.find((option) => option.rules.id === selectedRulesId) ??
+    ruleOptions.find((option) => option.rules.id.value === selectedRulesId) ??
     ruleOptions[0];
   if (selectedRule === undefined) {
     throw new RangeError('At least one selectable game rule is required.');
@@ -103,7 +103,6 @@ export function TitlePage({
             defaultValue: t('rules.custom.description'),
           })}
           <br />
-          {t('title.trust')}
         </Typography>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -124,8 +123,11 @@ export function TitlePage({
               }
             >
               {ruleOptions.map((option) => (
-                <MenuItem key={option.rules.id} value={option.rules.id}>
-                  {t(option.labelKey, { defaultValue: option.rules.id })}
+                <MenuItem
+                  key={option.rules.id.value}
+                  value={option.rules.id.value}
+                >
+                  {t(option.labelKey, { defaultValue: option.rules.id.value })}
                 </MenuItem>
               ))}
             </Select>

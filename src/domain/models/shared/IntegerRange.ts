@@ -1,11 +1,3 @@
-// 整数範囲を生成できなかった理由を示す。
-export enum IntegerRangeCreationFailure {
-  // 最小値または最大値が安全な整数ではない。
-  NotInteger = 'notInteger',
-  // 最小値が最大値を上回っている。
-  MinimumExceedsMaximum = 'minimumExceedsMaximum',
-}
-
 // 検証済みの最小値と最大値を保持する整数範囲のValue Object。
 export class IntegerRange {
   // 検証済みの境界値を保持する範囲を組み立てる。
@@ -14,16 +6,13 @@ export class IntegerRange {
     readonly maximum: number,
   ) {}
 
-  // 境界値を検証し、整数範囲または生成失敗理由を返す。
-  static create(
-    minimum: number,
-    maximum: number,
-  ): IntegerRange | IntegerRangeCreationFailure {
+  // 内部設定として渡された境界値を検証し、不正ならプログラマーエラーとして扱う。
+  static create(minimum: number, maximum: number): IntegerRange {
     if (!Number.isSafeInteger(minimum) || !Number.isSafeInteger(maximum)) {
-      return IntegerRangeCreationFailure.NotInteger;
+      throw new RangeError('Range boundaries must be safe integers.');
     }
     if (minimum > maximum) {
-      return IntegerRangeCreationFailure.MinimumExceedsMaximum;
+      throw new RangeError('Range minimum must not exceed maximum.');
     }
     return new IntegerRange(minimum, maximum);
   }

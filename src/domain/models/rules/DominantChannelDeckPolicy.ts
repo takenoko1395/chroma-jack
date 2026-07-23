@@ -5,15 +5,6 @@ import { COLOR_CHANNELS, ColorChannel } from '../color/ColorChannel';
 import type { RandomSource } from '../../usecases/gateway/RandomSource';
 import { IntegerRange } from '../shared/IntegerRange';
 
-// 内部生成用の整数範囲を検証済みValue Objectへ変換する。
-function createRange(minimum: number, maximum: number): IntegerRange {
-  const range = IntegerRange.create(minimum, maximum);
-  if (!(range instanceof IntegerRange)) {
-    throw new RangeError(`Invalid internal range: ${range}`);
-  }
-  return range;
-}
-
 // 主成分を均等に配り、主成分を強くしたカード色を生成する山札Policy。
 export class DominantChannelDeckPolicy {
   readonly dominantChannelRange: IntegerRange;
@@ -57,7 +48,7 @@ export class DominantChannelDeckPolicy {
     if (colorCardCount === 0) return [];
 
     const firstChannelIndex = args.randomSource.nextInteger(
-      createRange(0, COLOR_CHANNELS.length - 1),
+      IntegerRange.create(0, COLOR_CHANNELS.length - 1),
     );
     return Array.from({ length: colorCardCount }, (_, index) => {
       const channelIndex = (firstChannelIndex + index) % COLOR_CHANNELS.length;

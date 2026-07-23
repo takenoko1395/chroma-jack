@@ -11,15 +11,6 @@ import { GameRuleId } from './GameRuleId';
 import { CardOfferSize } from './CardOfferSize';
 import { DominantChannelDeckPolicy } from './DominantChannelDeckPolicy';
 
-// 固定値から検証済みのルール用整数範囲を生成する。
-function createRange(minimum: number, maximum: number): IntegerRange {
-  const range = IntegerRange.create(minimum, maximum);
-  if (!(range instanceof IntegerRange)) {
-    throw new RangeError(`Invalid rule range: ${range}`);
-  }
-  return range;
-}
-
 // 固定文字列から検証済みのゲームルールIDを生成する。
 function createRuleId(value: string): GameRuleId {
   const id = GameRuleId.create(value);
@@ -193,8 +184,8 @@ export class GameRules {
   // 標準の主成分カード生成規則を組み立てる。
   private static createColorDeckPolicy(): DominantChannelDeckPolicy {
     return new DominantChannelDeckPolicy({
-      dominantChannelRange: createRange(40, 120),
-      supportingChannelRange: createRange(0, 20),
+      dominantChannelRange: IntegerRange.create(40, 120),
+      supportingChannelRange: IntegerRange.create(0, 20),
     });
   }
 }

@@ -22,15 +22,6 @@ import type { RoundNumber } from '../../models/game/RoundNumber';
 import { IntegerRange } from '../../models/shared/IntegerRange';
 import type { RandomSource } from '../gateway/RandomSource';
 
-// 内部生成用の整数範囲を検証済みValue Objectへ変換する。
-function createRange(minimum: number, maximum: number): IntegerRange {
-  const range = IntegerRange.create(minimum, maximum);
-  if (!(range instanceof IntegerRange)) {
-    throw new RangeError(`Invalid internal range: ${range}`);
-  }
-  return range;
-}
-
 // Factory内部で組み立てた文字列を検証済みカードIDへ変換する。
 function createCardId(value: string): GameCardId {
   const id = GameCardId.create(value);
@@ -98,7 +89,9 @@ export class GameDeckFactory {
   // 山札内の枚数を維持したまま公開順をランダムに並べ替える。
   private shuffle(deck: GameCard[]): void {
     for (let index = deck.length - 1; index > 0; index -= 1) {
-      const swapIndex = this.randomSource.nextInteger(createRange(0, index));
+      const swapIndex = this.randomSource.nextInteger(
+        IntegerRange.create(0, index),
+      );
       [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
     }
   }
@@ -111,9 +104,11 @@ export class GameDeckFactory {
       CardEffectKind.AddColor | CardEffectKind.SubtractColor
     >;
   }): GameCard {
-    const channelIndex = this.randomSource.nextInteger(createRange(0, 2));
+    const channelIndex = this.randomSource.nextInteger(
+      IntegerRange.create(0, 2),
+    );
     const direction =
-      this.randomSource.nextInteger(createRange(0, 1)) === 0 ? -1 : 1;
+      this.randomSource.nextInteger(IntegerRange.create(0, 1)) === 0 ? -1 : 1;
     let effect: CardEffect;
 
     switch (args.kind) {

@@ -45,8 +45,6 @@ export class CardTypeDistribution {
     if (this.enabledKinds.length === 1)
       return this.enabledKinds[0] as CardEffectKind;
     const range = IntegerRange.create(1, this.totalWeight);
-    if (!(range instanceof IntegerRange))
-      throw new RangeError(`Invalid card weight range: ${range}`);
     let roll = random.nextInteger(range);
     for (const kind of this.enabledKinds) {
       roll -= this.weights[kind];

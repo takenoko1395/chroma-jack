@@ -4,20 +4,11 @@ import { CardEffectKind } from '../card/effects/CardEffect';
 import { IntegerRange } from '../shared/IntegerRange';
 import { DominantChannelDeckPolicy } from './DominantChannelDeckPolicy';
 
-// テスト用の固定値から検証済み整数範囲を生成する。
-function createRange(minimum: number, maximum: number): IntegerRange {
-  const range = IntegerRange.create(minimum, maximum);
-  if (!(range instanceof IntegerRange)) {
-    throw new RangeError(`Invalid test range: ${range}`);
-  }
-  return range;
-}
-
 // テスト対象となる主成分山札Policyを生成する。
 function createPolicy(): DominantChannelDeckPolicy {
   return new DominantChannelDeckPolicy({
-    dominantChannelRange: createRange(40, 120),
-    supportingChannelRange: createRange(0, 20),
+    dominantChannelRange: IntegerRange.create(40, 120),
+    supportingChannelRange: IntegerRange.create(0, 20),
   });
 }
 
@@ -45,8 +36,8 @@ describe('DominantChannelDeckPolicy', () => {
     expect(
       () =>
         new DominantChannelDeckPolicy({
-          dominantChannelRange: createRange(20, 120),
-          supportingChannelRange: createRange(0, 20),
+          dominantChannelRange: IntegerRange.create(20, 120),
+          supportingChannelRange: IntegerRange.create(0, 20),
         }),
     ).toThrow(RangeError);
   });
@@ -55,8 +46,8 @@ describe('DominantChannelDeckPolicy', () => {
     expect(
       () =>
         new DominantChannelDeckPolicy({
-          dominantChannelRange: createRange(40, 120),
-          supportingChannelRange: createRange(-1, 20),
+          dominantChannelRange: IntegerRange.create(40, 120),
+          supportingChannelRange: IntegerRange.create(-1, 20),
         }),
     ).toThrow(RangeError);
   });

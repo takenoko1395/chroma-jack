@@ -5,15 +5,6 @@ import { IntegerRange } from '../../domain/models/shared/IntegerRange';
 import { GameEngine } from '../../domain/usecases/GameEngine';
 import { SeededRandomSource } from './SeededRandomSource';
 
-// テスト用の整数範囲を生成する。
-function createRange(minimum: number, maximum: number): IntegerRange {
-  const range = IntegerRange.create(minimum, maximum);
-  if (!(range instanceof IntegerRange)) {
-    throw new RangeError(`Invalid test range: ${range}`);
-  }
-  return range;
-}
-
 // シードから生成した初期色と山札を比較可能な値へ変換する。
 function createRoundSnapshot(seed: number) {
   const game = new GameEngine(
@@ -54,7 +45,7 @@ describe('SeededRandomSource', () => {
 
   it('生成値を指定範囲の両端内に収める', () => {
     const source = new SeededRandomSource(0);
-    const range = createRange(10, 20);
+    const range = IntegerRange.create(10, 20);
 
     const values = Array.from({ length: 100 }, () => source.nextInteger(range));
 

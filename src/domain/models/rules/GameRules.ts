@@ -92,7 +92,7 @@ export class GameRules {
       args.deckSize % 3 !== 0
     ) {
       throw new RangeError(
-        'A balanced channel deck size must be divisible by three.',
+        'A balanced RGB or CMY deck size must be divisible by three.',
       );
     }
 
@@ -157,7 +157,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
-      colorDeckMode: ColorDeckMode.BalancedChannels,
+      colorDeckMode: ColorDeckMode.RandomMixed,
       cardTypeDistribution: CardTypeDistribution.subtractColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy({

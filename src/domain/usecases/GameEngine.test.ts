@@ -14,8 +14,6 @@ import { GameRound } from '../models/game/GameRound';
 import { GameScore } from '../models/game/GameScore';
 import { Hand } from '../models/hand/Hand';
 import { GameRules } from '../models/rules/GameRules';
-import { ColorDeckMode } from '../models/rules/ColorDeckMode';
-import { IntegerRange } from '../models/shared/IntegerRange';
 import { GameEngine } from './GameEngine';
 
 // 指定した乱数列でClassicルールのEngineを生成する。
@@ -25,18 +23,14 @@ function createEngine(values: readonly number[]): GameEngine {
 
 // テスト用の通常加算カードを生成する。
 describe('game actions', () => {
-  it('範囲内の初期色とRGBを均等に含む加算カードでラウンド1を始める', () => {
+  it('黒の初期色とRGBを均等に含む加算カードでラウンド1を始める', () => {
     const game = createEngine([0, 63, 127, 0]).startGame();
     const round = game.currentRound;
 
     expect(game.phase).toBe('playing');
     expect(round?.roundNumber.value).toBe(1);
     expect(round).not.toBeNull();
-    expect(
-      Object.values(round?.hand.color ?? {}).every(
-        (channel) => channel >= 0 && channel <= 127,
-      ),
-    ).toBe(true);
+    expect(round?.hand.color).toMatchObject({ red: 0, green: 0, blue: 0 });
     const deck = [
       ...(round?.offeredCards ?? []),
       ...(round?.remainingDeck ?? []),
@@ -188,23 +182,12 @@ describe('game actions', () => {
     expect(engine.discardOffer(finished)).toBe(finished);
   });
 
-  it('外から注入した初期色上限を使用する', () => {
+  it('外から注入した初期色を使用する', () => {
     const base = GameRules.classic();
-    const initialRange = IntegerRange.create(0, 10);
-    if (!(initialRange instanceof IntegerRange)) return;
     const rules = new GameRules({
+      ...base,
       id: createGameRuleId('small-initial-color'),
-      totalRounds: base.totalRounds,
-      deckSize: base.deckSize,
-      cardOfferSize: base.cardOfferSize,
-      initialColorRange: initialRange,
-      cardColorRange: base.cardColorRange,
-      initialColorGenerationPolicy: base.initialColorGenerationPolicy,
-      cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-      colorDeckMode: ColorDeckMode.BalancedChannels,
-      cardTypeDistribution: base.cardTypeDistribution,
-      overflowPolicy: base.overflowPolicy,
-      scorePolicy: base.scorePolicy,
+      initialColor: createColor(10, 10, 10),
     });
     const game = new GameEngine(
       rules,

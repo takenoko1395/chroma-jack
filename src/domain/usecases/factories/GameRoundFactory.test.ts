@@ -9,10 +9,7 @@ describe('GameRoundFactory', () => {
   it('初期Handと公開候補を持つラウンド開始状態を生成する', () => {
     const rules = GameRules.classic();
     const randomSource = new FixedRandomSource([10]);
-    const factory = new GameRoundFactory(
-      randomSource,
-      new GameDeckFactory(randomSource),
-    );
+    const factory = new GameRoundFactory(new GameDeckFactory(randomSource));
 
     const round = factory.create({
       rules,
@@ -20,13 +17,7 @@ describe('GameRoundFactory', () => {
     });
 
     expect(round.roundNumber.value).toBe(3);
-    expect(
-      Object.values(round.hand.color).every(
-        (channel) =>
-          channel >= rules.initialColorRange.minimum &&
-          channel <= rules.initialColorRange.maximum,
-      ),
-    ).toBe(true);
+    expect(round.hand.color).toBe(rules.initialColor);
     expect(round.offeredCards).toHaveLength(rules.cardOfferSize.value);
     expect(round.offeredCards.length + round.remainingDeck.length).toBe(
       rules.deckSize,

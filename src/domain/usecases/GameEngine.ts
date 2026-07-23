@@ -33,7 +33,7 @@ export class GameEngine {
     randomSource: RandomSource,
   ) {
     const deckFactory = new GameDeckFactory(randomSource);
-    this.roundFactory = new GameRoundFactory(randomSource, deckFactory);
+    this.roundFactory = new GameRoundFactory(deckFactory);
   }
 
   // タイトル画面で使用する未開始状態を生成する。

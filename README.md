@@ -52,7 +52,7 @@ npm run build
 - `src/domain/models/game`: ゲーム状態、ラウンド内のカード適用と進行、ラウンド結果
 - `src/domain/models/hand`: 色の加算・バースト判定・スコア計算に使う手札モデル
 - `src/domain/models/game`: ゲーム進行、ラウンド結果、ゲーム設定
-- `src/domain/models/rules`: 色生成傾向、許容バースト色数、スコアのPolicy
+- `src/domain/models/rules`: 主成分を均等に配る山札生成、許容バースト色数、スコアのPolicy
 - `src/domain/models/shared`: 検証済み整数範囲などの共有Value Object
 - `src/domain/factories`: ルールと乱数供給源から山札・ラウンド開始状態を生成するFactory
 - `src/domain/repositories`: Domainが要求する外部依存のインターフェース
@@ -68,7 +68,7 @@ npm run build
 - `src/presentation/router`: アプリケーション状態に基づく画面切り替え
 - `src/presentation/widgets`: 再利用可能な表示・操作部品
 
-ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。意味や制約を持つID、RGB変化量、ラウンド番号、得点は生成境界でValue Objectへ変換し、Domain内では生の値へ戻さず受け渡します。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameDeckFactory`がカードと山札、`GameRoundFactory`が初期Handと候補、`GameEngine`がゲーム進行を担当します。`GameEngine`はゲーム開始時に注入された`GameRules`を保持し、内部のFactoryは同じ`RandomSource`を共有するため、ゲーム途中でルールや乱数供給源が変わりません。通常プレイではブラウザ乱数を使い、デバッグや山札検証ではシード付き実装へ差し替えられます。初期色範囲、色生成傾向、通常カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
+ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。意味や制約を持つID、RGB変化量、ラウンド番号、得点は生成境界でValue Objectへ変換し、Domain内では生の値へ戻さず受け渡します。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameDeckFactory`がカードと山札、`GameRoundFactory`が初期Handと候補、`GameEngine`がゲーム進行を担当します。`GameEngine`はゲーム開始時に注入された`GameRules`を保持し、内部のFactoryは同じ`RandomSource`を共有するため、ゲーム途中でルールや乱数供給源が変わりません。通常プレイではブラウザ乱数を使い、デバッグや山札検証ではシード付き実装へ差し替えられます。固定初期色、主成分カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
 
 ### ルールの差し替え
 
@@ -78,11 +78,11 @@ npm run build
 <AppRouter initialRules={GameRules.clampChallenge()} />
 ```
 
-独自ルールでは`GameRules`へ検証済みの色範囲、`ColorGenerationPolicy`、`ColorDeckMode`、`CardTypeDistribution`、`OverflowPolicy`、`ScorePolicy`を渡します。各Policyの具体的な調整値と制約はコードとテストを正とします。渡されたルールが表示中に変更されても進行中のゲームには適用せず、次にゲームを開始した時点で採用します。
+独自ルールでは`GameRules`へ検証済みの初期色、`DominantChannelDeckPolicy`、`CardTypeDistribution`、`OverflowPolicy`、`ScorePolicy`を渡します。各Policyの具体的な調整値と制約はコードとテストを正とします。渡されたルールが表示中に変更されても進行中のゲームには適用せず、次にゲームを開始した時点で採用します。
 
 ## 実装済み機能
 
-- ランダムな初期色と、ルールごとに指定できる山札・同時公開枚数による全5ラウンド
+- 加算・減算方向に応じた固定初期色と、ルールごとに指定できる山札・同時公開枚数による全5ラウンド
 - 候補色のクリックによる即時適用、候補をすべて捨てる、現在色で止める操作
 - RGB増減、成分交換、彩度・明度操作の特殊カード
 - ラウンド中の数値表示解禁と、次のバーストを防ぐ特殊カード

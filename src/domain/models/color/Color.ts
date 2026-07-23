@@ -38,6 +38,16 @@ export class Color {
     return new Color({ red, green, blue });
   }
 
+  // RGB加算ルールの開始色となる黒を返す。
+  static black(): Color {
+    return new Color({ red: 0, green: 0, blue: 0 });
+  }
+
+  // CMY減算ルールの開始色となる白を返す。
+  static white(): Color {
+    return new Color({ red: 255, green: 255, blue: 255 });
+  }
+
   // 2色の各成分を加算した新しい色を返す。
   add(other: Color): Color {
     const added = new Color({

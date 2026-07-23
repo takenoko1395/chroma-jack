@@ -101,4 +101,36 @@ describe('GameDeckFactory', () => {
     ).toBe(true);
     expect(deck[0]?.id.value).toBe('round-2-card-1');
   });
+
+  it('特殊カードと混在する色カードにも主成分山札Policyを適用する', () => {
+    const rules = GameRules.specialDeck();
+    const deck = new GameDeckFactory(new FixedRandomSource([1, 102])).create({
+      rules,
+      roundNumber: createRoundNumber(2),
+    });
+    const colorCards = deck.filter(
+      (card) => card.effect.kind === CardEffectKind.AddColor,
+    );
+    const specialCards = deck.filter(
+      (card) => card.effect.kind === CardEffectKind.PreventBurst,
+    );
+    const dominantCounts = { red: 0, green: 0, blue: 0 };
+
+    colorCards.forEach((card) => {
+      if (card.effect.kind !== CardEffectKind.AddColor) return;
+      const channels = [
+        card.effect.amount.red,
+        card.effect.amount.green,
+        card.effect.amount.blue,
+      ];
+      const largest = Math.max(...channels);
+      if (card.effect.amount.red === largest) dominantCounts.red += 1;
+      if (card.effect.amount.green === largest) dominantCounts.green += 1;
+      if (card.effect.amount.blue === largest) dominantCounts.blue += 1;
+    });
+
+    expect(colorCards).toHaveLength(15);
+    expect(specialCards).toHaveLength(15);
+    expect(dominantCounts).toEqual({ red: 5, green: 5, blue: 5 });
+  });
 });

@@ -1,19 +1,15 @@
-import { CardColorAmount } from '../card/CardColorAmount';
+import { Color } from '../color/Color';
 import { Hand } from '../hand/Hand';
 import { IntegerRange } from '../shared/IntegerRange';
-import {
-  ColorGenerationPolicy,
-  ColorGenerationTrend,
-} from './ColorGenerationPolicy';
 import { OverflowPolicy } from './OverflowPolicy';
 import { ScorePolicy, ScoreTarget } from './ScorePolicy';
 import {
   CardTypeDistribution,
   createCardTypeWeights,
 } from './CardTypeDistribution';
-import { ColorDeckMode } from './ColorDeckMode';
 import { GameRuleId } from './GameRuleId';
 import { CardOfferSize } from './CardOfferSize';
+import { DominantChannelDeckPolicy } from './DominantChannelDeckPolicy';
 
 // 固定値から検証済みのルール用整数範囲を生成する。
 function createRange(minimum: number, maximum: number): IntegerRange {
@@ -44,17 +40,23 @@ function createCardOfferSize(value: number): CardOfferSize {
 
 // GameRulesの生成時に指定する設定値とPolicy一式。
 export type GameRulesArgs = Readonly<{
+  // ルールの識別子を固定する。
   id: GameRuleId;
+  // 1ゲームで行うラウンド数を固定する。
   totalRounds: number;
+  // 1ゲームで使用する山札の枚数を固定する。
   deckSize: number;
+  // 1ラウンドで公開するカード枚数を固定する。
   cardOfferSize: CardOfferSize;
-  initialColorRange: IntegerRange;
-  cardColorRange: IntegerRange;
-  initialColorGenerationPolicy: ColorGenerationPolicy;
-  cardColorGenerationPolicy: ColorGenerationPolicy;
-  colorDeckMode: ColorDeckMode;
+  // 各ラウンドで使用する初期色を固定する。
+  initialColor: Color;
+  // 主成分カードの配分と色生成規則を固定する。
+  colorDeckPolicy: DominantChannelDeckPolicy;
+  // 山札のカード種類ごとの出現率を固定する。
   cardTypeDistribution: CardTypeDistribution;
+  // 超過成分の扱い方を固定する。
   overflowPolicy: OverflowPolicy;
+  // 採点方法を固定する。
   scorePolicy: ScorePolicy;
 }>;
 
@@ -64,11 +66,8 @@ export class GameRules {
   readonly totalRounds: number;
   readonly deckSize: number;
   readonly cardOfferSize: CardOfferSize;
-  readonly initialColorRange: IntegerRange;
-  readonly cardColorRange: IntegerRange;
-  readonly initialColorGenerationPolicy: ColorGenerationPolicy;
-  readonly cardColorGenerationPolicy: ColorGenerationPolicy;
-  readonly colorDeckMode: ColorDeckMode;
+  readonly initialColor: Color;
+  readonly colorDeckPolicy: DominantChannelDeckPolicy;
   readonly cardTypeDistribution: CardTypeDistribution;
   readonly overflowPolicy: OverflowPolicy;
   readonly scorePolicy: ScorePolicy;
@@ -87,38 +86,19 @@ export class GameRules {
       );
     }
     if (
-      args.initialColorRange.minimum < 0 ||
-      args.initialColorRange.maximum > Hand.CHANNEL_LIMIT
+      args.initialColor.red > Hand.CHANNEL_LIMIT ||
+      args.initialColor.green > Hand.CHANNEL_LIMIT ||
+      args.initialColor.blue > Hand.CHANNEL_LIMIT
     ) {
       throw new RangeError('Initial colors must fit within the hand limit.');
-    }
-    if (
-      args.cardColorRange.minimum < 0 ||
-      args.cardColorRange.maximum > CardColorAmount.MAXIMUM_CHANNEL ||
-      args.cardColorRange.maximum === 0
-    ) {
-      throw new RangeError(
-        'Card colors must fit within the card limits and allow a non-black card.',
-      );
-    }
-    if (
-      args.colorDeckMode !== ColorDeckMode.RandomMixed &&
-      args.deckSize % 3 !== 0
-    ) {
-      throw new RangeError(
-        'A balanced RGB or CMY deck size must be divisible by three.',
-      );
     }
 
     this.id = args.id;
     this.totalRounds = args.totalRounds;
     this.deckSize = args.deckSize;
     this.cardOfferSize = args.cardOfferSize;
-    this.initialColorRange = args.initialColorRange;
-    this.cardColorRange = args.cardColorRange;
-    this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
-    this.cardColorGenerationPolicy = args.cardColorGenerationPolicy;
-    this.colorDeckMode = args.colorDeckMode;
+    this.initialColor = args.initialColor;
+    this.colorDeckPolicy = args.colorDeckPolicy;
     this.cardTypeDistribution = args.cardTypeDistribution;
     this.overflowPolicy = args.overflowPolicy;
     this.scorePolicy = args.scorePolicy;
@@ -131,15 +111,8 @@ export class GameRules {
       totalRounds: 5,
       deckSize: 12,
       cardOfferSize: createCardOfferSize(1),
-      initialColorRange: createRange(0, 20),
-      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
-      initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Lower,
-      ),
-      cardColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Uniform,
-      ),
-      colorDeckMode: ColorDeckMode.BalancedChannels,
+      initialColor: Color.black(),
+      colorDeckPolicy: GameRules.createColorDeckPolicy(),
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy({
@@ -157,15 +130,8 @@ export class GameRules {
       totalRounds: 5,
       deckSize: 12,
       cardOfferSize: createCardOfferSize(1),
-      initialColorRange: createRange(235, Hand.CHANNEL_LIMIT),
-      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
-      initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Higher,
-      ),
-      cardColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Uniform,
-      ),
-      colorDeckMode: ColorDeckMode.BalancedChannels,
+      initialColor: Color.white(),
+      colorDeckPolicy: GameRules.createColorDeckPolicy(),
       cardTypeDistribution: CardTypeDistribution.subtractColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy({
@@ -183,15 +149,8 @@ export class GameRules {
       totalRounds: 5,
       deckSize: 24,
       cardOfferSize: createCardOfferSize(3),
-      initialColorRange: createRange(0, 159),
-      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
-      initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Lower,
-      ),
-      cardColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Higher,
-      ),
-      colorDeckMode: ColorDeckMode.BalancedChannels,
+      initialColor: Color.black(),
+      colorDeckPolicy: GameRules.createColorDeckPolicy(),
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.clampAndContinue(1),
       scorePolicy: new ScorePolicy({
@@ -209,15 +168,8 @@ export class GameRules {
       totalRounds: 5,
       deckSize: 30,
       cardOfferSize: createCardOfferSize(3),
-      initialColorRange: createRange(0, 127),
-      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
-      initialColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Lower,
-      ),
-      cardColorGenerationPolicy: new ColorGenerationPolicy(
-        ColorGenerationTrend.Uniform,
-      ),
-      colorDeckMode: ColorDeckMode.RandomMixed,
+      initialColor: Color.black(),
+      colorDeckPolicy: GameRules.createColorDeckPolicy(),
       cardTypeDistribution: new CardTypeDistribution(
         createCardTypeWeights({
           addColor: 60,
@@ -235,6 +187,14 @@ export class GameRules {
         clampPenalty: 0,
         target: ScoreTarget.White,
       }),
+    });
+  }
+
+  // 標準の主成分カード生成規則を組み立てる。
+  private static createColorDeckPolicy(): DominantChannelDeckPolicy {
+    return new DominantChannelDeckPolicy({
+      dominantChannelRange: createRange(40, 120),
+      supportingChannelRange: createRange(0, 20),
     });
   }
 }

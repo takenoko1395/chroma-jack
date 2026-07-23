@@ -55,7 +55,7 @@ export function RoundResult({
         {didBurst
           ? t('roundResult.burst')
           : t('game.points', {
-              value: result.score.toLocaleString(i18n.language),
+              value: result.score.value.toLocaleString(i18n.language),
             })}
       </Typography>
       {!didBurst && (

@@ -18,9 +18,11 @@ describe('ColorGenerationPolicy', () => {
     const higher = new ColorGenerationPolicy(ColorGenerationTrend.Higher);
     const lower = new ColorGenerationPolicy(ColorGenerationTrend.Lower);
 
-    expect(higher.generateChannel(range, new FixedRandomSource([2, 8]))).toBe(
+    expect(higher.generateColor(range, new FixedRandomSource([2, 8])).red).toBe(
       8,
     );
-    expect(lower.generateChannel(range, new FixedRandomSource([2, 8]))).toBe(2);
+    expect(lower.generateColor(range, new FixedRandomSource([2, 8])).red).toBe(
+      2,
+    );
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FixedRandomSource } from '../../../test/helpers/FixedRandomSource';
+import { createRoundNumber } from '../../../test/helpers/createDomainValue';
 import { CardEffectKind } from '../../models/card/effects/CardEffect';
 import { GameRules } from '../../models/rules/GameRules';
 import { GameDeckFactory } from './GameDeckFactory';
@@ -9,10 +10,13 @@ describe('GameDeckFactory', () => {
     const values = [0, 63, 127, 0];
     const additiveDeck = new GameDeckFactory(
       new FixedRandomSource(values),
-    ).create({ rules: GameRules.classic(), roundNumber: 1 });
+    ).create({ rules: GameRules.classic(), roundNumber: createRoundNumber(1) });
     const subtractiveDeck = new GameDeckFactory(
       new FixedRandomSource(values),
-    ).create({ rules: GameRules.cmySubtractive(), roundNumber: 1 });
+    ).create({
+      rules: GameRules.cmySubtractive(),
+      roundNumber: createRoundNumber(1),
+    });
 
     const additiveAmounts = additiveDeck.map((card) => {
       if (card.effect.kind !== CardEffectKind.AddColor) return null;
@@ -30,7 +34,7 @@ describe('GameDeckFactory', () => {
     const rules = GameRules.classic();
     const deck = new GameDeckFactory(
       new FixedRandomSource([0, 63, 127, 0]),
-    ).create({ rules, roundNumber: 1 });
+    ).create({ rules, roundNumber: createRoundNumber(1) });
     const primaryCounts = { red: 0, green: 0, blue: 0 };
 
     expect(deck).toHaveLength(rules.deckSize);
@@ -62,7 +66,7 @@ describe('GameDeckFactory', () => {
     const rules = GameRules.cmySubtractive();
     const deck = new GameDeckFactory(
       new FixedRandomSource([0, 63, 127, 0]),
-    ).create({ rules, roundNumber: 1 });
+    ).create({ rules, roundNumber: createRoundNumber(1) });
     const primaryCounts = { cyan: 0, magenta: 0, yellow: 0 };
 
     deck.forEach((card) => {
@@ -88,13 +92,13 @@ describe('GameDeckFactory', () => {
     const rules = GameRules.specialDeck();
     const deck = new GameDeckFactory(new FixedRandomSource([999])).create({
       rules,
-      roundNumber: 2,
+      roundNumber: createRoundNumber(2),
     });
 
     expect(deck).toHaveLength(rules.deckSize);
     expect(
       deck.every((card) => card.effect.kind === CardEffectKind.PreventBurst),
     ).toBe(true);
-    expect(deck[0]?.id).toBe('round-2-card-1');
+    expect(deck[0]?.id.value).toBe('round-2-card-1');
   });
 });

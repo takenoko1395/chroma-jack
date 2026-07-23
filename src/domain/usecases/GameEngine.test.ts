@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { FixedRandomSource } from '../../test/helpers/FixedRandomSource';
-import { GameCard } from '../models/card/GameCard';
+import {
+  createAddColorCard,
+  createColor,
+  createGameCardId,
+  createGameRuleId,
+  createRoundNumber,
+  createSubtractColorCard,
+} from '../../test/helpers/createDomainValue';
 import { CardEffectKind } from '../models/card/effects/CardEffect';
-import { Color } from '../models/color/Color';
 import type { GameState } from '../models/game/Game';
 import { GameRound } from '../models/game/GameRound';
 import { GameScore } from '../models/game/GameScore';
@@ -18,36 +24,13 @@ function createEngine(values: readonly number[]): GameEngine {
 }
 
 // テスト用の通常加算カードを生成する。
-function createCard(
-  id: string,
-  red: number,
-  green: number,
-  blue: number,
-): GameCard {
-  const card = GameCard.createAddColor(id, red, green, blue);
-  if (!(card instanceof GameCard)) throw new Error('Invalid test card');
-  return card;
-}
-
-// テスト用の通常CMY減算カードを生成する。
-function createSubtractCard(
-  id: string,
-  cyan: number,
-  magenta: number,
-  yellow: number,
-): GameCard {
-  const card = GameCard.createSubtractColor(id, cyan, magenta, yellow);
-  if (!(card instanceof GameCard)) throw new Error('Invalid test card');
-  return card;
-}
-
 describe('game actions', () => {
   it('範囲内の初期色とRGBを均等に含む加算カードでラウンド1を始める', () => {
     const game = createEngine([0, 63, 127, 0]).startGame();
     const round = game.currentRound;
 
     expect(game.phase).toBe('playing');
-    expect(round?.roundNumber).toBe(1);
+    expect(round?.roundNumber.value).toBe(1);
     expect(round).not.toBeNull();
     expect(
       Object.values(round?.hand.color ?? {}).every(
@@ -63,7 +46,11 @@ describe('game actions', () => {
     deck.forEach((card) => {
       expect(card.effect.kind).toBe(CardEffectKind.AddColor);
       if (card.effect.kind !== CardEffectKind.AddColor) return;
-      const channels = Object.values(card.effect.amount);
+      const channels = [
+        card.effect.amount.red,
+        card.effect.amount.green,
+        card.effect.amount.blue,
+      ];
       const largestAmount = Math.max(...channels);
       expect(channels.filter((channel) => channel > 20)).toHaveLength(1);
       if (card.effect.amount.red === largestAmount) cardCounts.red += 1;
@@ -100,14 +87,13 @@ describe('game actions', () => {
   it('CMY減算カードを適用し、黒を目標に採点する', () => {
     const rules = GameRules.cmySubtractive();
     const engine = new GameEngine(rules, new FixedRandomSource([1]));
-    const currentColor = Color.create(100, 100, 100);
-    if (!(currentColor instanceof Color)) return;
-    const card = createSubtractCard('subtract', 40, 20, 10);
+    const currentColor = createColor(100, 100, 100);
+    const card = createSubtractColorCard('subtract', 40, 20, 10);
     const initialHand = new Hand(currentColor);
     const state: GameState = {
       phase: 'playing',
       currentRound: new GameRound({
-        roundNumber: 1,
+        roundNumber: createRoundNumber(1),
         hand: initialHand,
         offeredCards: [card],
         remainingDeck: [],
@@ -123,8 +109,8 @@ describe('game actions', () => {
       green: 80,
       blue: 90,
     });
-    expect(finished.roundResults[0]?.score).toBeGreaterThan(
-      rules.scorePolicy.calculate(initialHand),
+    expect(finished.roundResults[0]?.score.value).toBeGreaterThan(
+      rules.scorePolicy.calculate(initialHand).value,
     );
   });
 
@@ -150,13 +136,12 @@ describe('game actions', () => {
   });
 
   it('加算でバーストすると直前の色を保って0点にする', () => {
-    const currentColor = Color.create(250, 10, 10);
-    if (!(currentColor instanceof Color)) return;
-    const currentCard = createCard('burst', 6, 1, 1);
+    const currentColor = createColor(250, 10, 10);
+    const currentCard = createAddColorCard('burst', 6, 1, 1);
     const state: GameState = {
       phase: 'playing',
       currentRound: new GameRound({
-        roundNumber: 1,
+        roundNumber: createRoundNumber(1),
         hand: new Hand(currentColor),
         offeredCards: [currentCard],
         remainingDeck: [],
@@ -167,10 +152,8 @@ describe('game actions', () => {
     const finished = createEngine([1]).acceptOfferedCard(state, currentCard.id);
     expect(finished.phase).toBe('roundFinished');
     expect(finished.currentRound?.hand).toBe(state.currentRound?.hand);
-    expect(finished.roundResults[0]).toMatchObject({
-      score: 0,
-      endReason: 'burst',
-    });
+    expect(finished.roundResults[0]?.score.value).toBe(0);
+    expect(finished.roundResults[0]?.endReason).toBe('burst');
     expect(finished.roundResults[0]?.burstHand?.color).toMatchObject({
       red: 256,
       green: 11,
@@ -189,14 +172,19 @@ describe('game actions', () => {
     expect(game.phase).toBe('gameFinished');
     expect(game.roundResults).toHaveLength(5);
     expect(GameScore.calculate(game.roundResults).value).toBe(
-      game.roundResults.reduce((total, result) => total + result.score, 0),
+      game.roundResults.reduce(
+        (total, result) => total + result.score.value,
+        0,
+      ),
     );
   });
 
   it('不正な状態の操作では状態を変更しない', () => {
     const engine = createEngine([10]);
     const finished = engine.standCurrentRound(engine.startGame());
-    expect(engine.acceptOfferedCard(finished, 'missing')).toBe(finished);
+    expect(
+      engine.acceptOfferedCard(finished, createGameCardId('missing')),
+    ).toBe(finished);
     expect(engine.discardOffer(finished)).toBe(finished);
   });
 
@@ -205,7 +193,7 @@ describe('game actions', () => {
     const initialRange = IntegerRange.create(0, 10);
     if (!(initialRange instanceof IntegerRange)) return;
     const rules = new GameRules({
-      id: 'small-initial-color',
+      id: createGameRuleId('small-initial-color'),
       totalRounds: base.totalRounds,
       deckSize: base.deckSize,
       cardOfferSize: base.cardOfferSize,
@@ -233,19 +221,18 @@ describe('game actions', () => {
   it('クランプルールでは超過後も次のカードへ進み、得点上限を下げる', () => {
     const rules = GameRules.clampChallenge();
     const engine = new GameEngine(rules, new FixedRandomSource([1]));
-    const color = Color.create(250, 255, 255);
-    if (!(color instanceof Color)) return;
-    const currentCard = createCard('current', 10, 0, 0);
-    const nextCard = createCard('next', 1, 1, 1);
+    const color = createColor(250, 255, 255);
+    const currentCard = createAddColorCard('current', 10, 0, 0);
+    const nextCard = createAddColorCard('next', 1, 1, 1);
     const state: GameState = {
       phase: 'playing',
       currentRound: new GameRound({
-        roundNumber: 1,
+        roundNumber: createRoundNumber(1),
         hand: new Hand(color),
         offeredCards: [
           currentCard,
-          createCard('discarded-1', 1, 0, 0),
-          createCard('discarded-2', 0, 1, 0),
+          createAddColorCard('discarded-1', 1, 0, 0),
+          createAddColorCard('discarded-2', 0, 1, 0),
         ],
         remainingDeck: [nextCard],
       }),
@@ -256,11 +243,11 @@ describe('game actions', () => {
     expect(continued.phase).toBe('playing');
     expect(continued.currentRound?.hand.color.red).toBe(255);
     expect(continued.currentRound?.hand.clampedChannels.size).toBe(1);
-    expect(continued.currentRound?.offeredCards.map((card) => card.id)).toEqual(
-      ['next'],
-    );
+    expect(
+      continued.currentRound?.offeredCards.map((card) => card.id.value),
+    ).toEqual(['next']);
 
     const finished = engine.standCurrentRound(continued);
-    expect(finished.roundResults[0]?.score).toBe(800);
+    expect(finished.roundResults[0]?.score.value).toBe(800);
   });
 });

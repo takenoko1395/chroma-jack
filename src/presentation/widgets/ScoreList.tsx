@@ -11,17 +11,19 @@ export function ScoreList({ results }: ScoreListProps) {
     <List disablePadding aria-label={t('finalResult.scoreList')}>
       {results.map((result) => (
         <ListItem
-          key={result.roundNumber}
+          key={result.roundNumber.value}
           disableGutters
-          divider={result.roundNumber < results.length}
+          divider={result.roundNumber.value < results.length}
           sx={{ py: 1.5 }}
         >
           <ListItemText
-            primary={t('finalResult.round', { number: result.roundNumber })}
+            primary={t('finalResult.round', {
+              number: result.roundNumber.value,
+            })}
           />
           <Typography fontWeight={750}>
             {t('game.points', {
-              value: result.score.toLocaleString(i18n.language),
+              value: result.score.value.toLocaleString(i18n.language),
             })}
           </Typography>
         </ListItem>

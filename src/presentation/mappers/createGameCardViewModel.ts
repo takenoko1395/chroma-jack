@@ -15,13 +15,13 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
       return {
         id: card.id,
         titleKey: 'cards.addColor',
-        backgroundColor: `rgb(${effect.amount.red}, ${effect.amount.green}, ${effect.amount.blue})`,
+        backgroundColor: `rgb(${effect.amount.color.red}, ${effect.amount.color.green}, ${effect.amount.color.blue})`,
       };
     case CardEffectKind.SubtractColor:
       return {
         id: card.id,
         titleKey: 'cards.subtractColor',
-        backgroundColor: `rgb(${255 - effect.amount.red}, ${255 - effect.amount.green}, ${255 - effect.amount.blue})`,
+        backgroundColor: `rgb(${255 - effect.amount.color.red}, ${255 - effect.amount.color.green}, ${255 - effect.amount.color.blue})`,
       };
     case CardEffectKind.AdjustChannels: {
       const changes = Object.entries(effect.delta).filter(

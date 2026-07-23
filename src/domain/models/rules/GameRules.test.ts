@@ -3,6 +3,8 @@ import { IntegerRange } from '../shared/IntegerRange';
 import { GameRules } from './GameRules';
 import { ColorDeckMode } from './ColorDeckMode';
 import { ScoreTarget } from './ScorePolicy';
+import { createGameRuleId } from '../../../test/helpers/createDomainValue';
+import { CardOfferSize } from './CardOfferSize';
 
 describe('GameRules', () => {
   it('RGB加算は白、CMY減算は黒を目標にする', () => {
@@ -18,10 +20,10 @@ describe('GameRules', () => {
   it('オブジェクト引数から各設定を名前どおり保持する', () => {
     const rules = GameRules.clampChallenge();
 
-    expect(rules.id).toBe('clamp-challenge');
+    expect(rules.id.value).toBe('clamp-challenge');
     expect(rules.totalRounds).toBe(5);
     expect(rules.deckSize).toBe(24);
-    expect(rules.cardOfferSize).toBe(3);
+    expect(rules.cardOfferSize.value).toBe(3);
     expect(rules.initialColorRange.maximum).toBe(159);
     expect(rules.cardColorRange.maximum).toBe(160);
     expect(rules.overflowPolicy.allowedBurstColors).toBe(1);
@@ -37,7 +39,7 @@ describe('GameRules', () => {
     expect(
       () =>
         new GameRules({
-          id: 'invalid',
+          id: createGameRuleId('invalid'),
           totalRounds: base.totalRounds,
           deckSize: base.deckSize,
           cardOfferSize: base.cardOfferSize,
@@ -55,14 +57,17 @@ describe('GameRules', () => {
 
   it('候補枚数が山札枚数を超える設定を拒否する', () => {
     const base = GameRules.classic();
+    const oversizedOffer = CardOfferSize.create(base.deckSize + 1);
+    expect(oversizedOffer).toBeInstanceOf(CardOfferSize);
+    if (!(oversizedOffer instanceof CardOfferSize)) return;
 
     expect(
       () =>
         new GameRules({
-          id: 'invalid-offer-size',
+          id: createGameRuleId('invalid-offer-size'),
           totalRounds: base.totalRounds,
           deckSize: base.deckSize,
-          cardOfferSize: base.deckSize + 1,
+          cardOfferSize: oversizedOffer,
           initialColorRange: base.initialColorRange,
           cardColorRange: base.cardColorRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
@@ -81,7 +86,7 @@ describe('GameRules', () => {
     expect(
       () =>
         new GameRules({
-          id: 'unbalanced-deck',
+          id: createGameRuleId('unbalanced-deck'),
           totalRounds: base.totalRounds,
           deckSize: 10,
           cardOfferSize: base.cardOfferSize,

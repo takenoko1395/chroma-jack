@@ -1,4 +1,4 @@
-import { GameCard } from '../card/GameCard';
+import { CardColorAmount } from '../card/CardColorAmount';
 import { Hand } from '../hand/Hand';
 import { IntegerRange } from '../shared/IntegerRange';
 import {
@@ -12,6 +12,8 @@ import {
   createCardTypeWeights,
 } from './CardTypeDistribution';
 import { ColorDeckMode } from './ColorDeckMode';
+import { GameRuleId } from './GameRuleId';
+import { CardOfferSize } from './CardOfferSize';
 
 // 固定値から検証済みのルール用整数範囲を生成する。
 function createRange(minimum: number, maximum: number): IntegerRange {
@@ -22,12 +24,30 @@ function createRange(minimum: number, maximum: number): IntegerRange {
   return range;
 }
 
+// 固定文字列から検証済みのゲームルールIDを生成する。
+function createRuleId(value: string): GameRuleId {
+  const id = GameRuleId.create(value);
+  if (!(id instanceof GameRuleId)) {
+    throw new RangeError(`Invalid built-in rule id: ${id}`);
+  }
+  return id;
+}
+
+// 固定値から検証済みのカード公開枚数を生成する。
+function createCardOfferSize(value: number): CardOfferSize {
+  const size = CardOfferSize.create(value);
+  if (!(size instanceof CardOfferSize)) {
+    throw new RangeError(`Invalid built-in card offer size: ${size}`);
+  }
+  return size;
+}
+
 // GameRulesの生成時に指定する設定値とPolicy一式。
 export type GameRulesArgs = Readonly<{
-  id: string;
+  id: GameRuleId;
   totalRounds: number;
   deckSize: number;
-  cardOfferSize: number;
+  cardOfferSize: CardOfferSize;
   initialColorRange: IntegerRange;
   cardColorRange: IntegerRange;
   initialColorGenerationPolicy: ColorGenerationPolicy;
@@ -40,10 +60,10 @@ export type GameRulesArgs = Readonly<{
 
 // 1ゲームで固定して使用する生成・超過・採点ルール一式。
 export class GameRules {
-  readonly id: string;
+  readonly id: GameRuleId;
   readonly totalRounds: number;
   readonly deckSize: number;
-  readonly cardOfferSize: number;
+  readonly cardOfferSize: CardOfferSize;
   readonly initialColorRange: IntegerRange;
   readonly cardColorRange: IntegerRange;
   readonly initialColorGenerationPolicy: ColorGenerationPolicy;
@@ -55,19 +75,13 @@ export class GameRules {
 
   // 1ゲームで使用するすべてのPolicyと設定値を検証して保持する。
   constructor(args: GameRulesArgs) {
-    if (args.id.trim().length === 0)
-      throw new RangeError('Rules id is required.');
     if (!Number.isSafeInteger(args.totalRounds) || args.totalRounds <= 0) {
       throw new RangeError('Total rounds must be a positive integer.');
     }
     if (!Number.isSafeInteger(args.deckSize) || args.deckSize <= 0) {
       throw new RangeError('Deck size must be a positive integer.');
     }
-    if (
-      !Number.isSafeInteger(args.cardOfferSize) ||
-      args.cardOfferSize <= 0 ||
-      args.cardOfferSize > args.deckSize
-    ) {
+    if (args.cardOfferSize.value > args.deckSize) {
       throw new RangeError(
         'Card offer size must be a positive integer within the deck size.',
       );
@@ -79,8 +93,8 @@ export class GameRules {
       throw new RangeError('Initial colors must fit within the hand limit.');
     }
     if (
-      args.cardColorRange.minimum < GameCard.MINIMUM_CHANNEL ||
-      args.cardColorRange.maximum > GameCard.MAXIMUM_CHANNEL ||
+      args.cardColorRange.minimum < 0 ||
+      args.cardColorRange.maximum > CardColorAmount.MAXIMUM_CHANNEL ||
       args.cardColorRange.maximum === 0
     ) {
       throw new RangeError(
@@ -113,15 +127,12 @@ export class GameRules {
   // 従来のバースト終了ルールを生成する。
   static classic(): GameRules {
     return new GameRules({
-      id: 'classic',
+      id: createRuleId('classic'),
       totalRounds: 5,
       deckSize: 12,
-      cardOfferSize: 1,
+      cardOfferSize: createCardOfferSize(1),
       initialColorRange: createRange(0, 20),
-      cardColorRange: createRange(
-        GameCard.MINIMUM_CHANNEL,
-        GameCard.MAXIMUM_CHANNEL,
-      ),
+      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Lower,
       ),
@@ -142,22 +153,19 @@ export class GameRules {
   // 明るい初期色からCMYを減算し、黒を目指す基本ルールを生成する。
   static cmySubtractive(): GameRules {
     return new GameRules({
-      id: 'cmy-subtractive',
+      id: createRuleId('cmy-subtractive'),
       totalRounds: 5,
       deckSize: 12,
-      cardOfferSize: 1,
+      cardOfferSize: createCardOfferSize(1),
       initialColorRange: createRange(235, Hand.CHANNEL_LIMIT),
-      cardColorRange: createRange(
-        GameCard.MINIMUM_CHANNEL,
-        GameCard.MAXIMUM_CHANNEL,
-      ),
+      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Higher,
       ),
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
-      colorDeckMode: ColorDeckMode.RandomMixed,
+      colorDeckMode: ColorDeckMode.BalancedChannels,
       cardTypeDistribution: CardTypeDistribution.subtractColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
       scorePolicy: new ScorePolicy({
@@ -171,15 +179,12 @@ export class GameRules {
   // 超過成分を固定し、固定数に応じて得点上限を下げるルールを生成する。
   static clampChallenge(): GameRules {
     return new GameRules({
-      id: 'clamp-challenge',
+      id: createRuleId('clamp-challenge'),
       totalRounds: 5,
       deckSize: 24,
-      cardOfferSize: 3,
+      cardOfferSize: createCardOfferSize(3),
       initialColorRange: createRange(0, 159),
-      cardColorRange: createRange(
-        GameCard.MINIMUM_CHANNEL,
-        GameCard.MAXIMUM_CHANNEL,
-      ),
+      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Lower,
       ),
@@ -200,15 +205,12 @@ export class GameRules {
   // すべての特殊カードを試せる3枚選択ルールを生成する。
   static specialDeck(): GameRules {
     return new GameRules({
-      id: 'special-deck',
+      id: createRuleId('special-deck'),
       totalRounds: 5,
       deckSize: 30,
-      cardOfferSize: 3,
+      cardOfferSize: createCardOfferSize(3),
       initialColorRange: createRange(0, 127),
-      cardColorRange: createRange(
-        GameCard.MINIMUM_CHANNEL,
-        GameCard.MAXIMUM_CHANNEL,
-      ),
+      cardColorRange: createRange(0, CardColorAmount.MAXIMUM_CHANNEL),
       initialColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Lower,
       ),

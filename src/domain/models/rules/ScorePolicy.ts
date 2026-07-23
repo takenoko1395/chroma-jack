@@ -1,4 +1,5 @@
 import { Hand } from '../hand/Hand';
+import { RoundScore } from '../game/RoundScore';
 
 // スコア計算で目標とする無彩色を示す。
 export enum ScoreTarget {
@@ -35,7 +36,7 @@ export class ScorePolicy {
   }
 
   // 手札の色を採点し、クランプ数に応じた上限内のスコアを返す。
-  calculate(hand: Hand): number {
+  calculate(hand: Hand): RoundScore {
     const channelLimit = Hand.CHANNEL_LIMIT;
     const targetChannel = this.target === ScoreTarget.White ? channelLimit : 0;
     const maximumDistance = Math.sqrt(3 * channelLimit ** 2);
@@ -51,6 +52,12 @@ export class ScorePolicy {
     const normalizedScore = Math.round(
       (1 - distance / maximumDistance) * this.maximumScore,
     );
-    return Math.max(0, Math.min(scoreCeiling, normalizedScore));
+    const score = RoundScore.create(
+      Math.max(0, Math.min(scoreCeiling, normalizedScore)),
+    );
+    if (!(score instanceof RoundScore)) {
+      throw new RangeError(`Calculated score must be valid: ${score}`);
+    }
+    return score;
   }
 }

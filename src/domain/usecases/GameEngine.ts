@@ -1,6 +1,7 @@
 import { GameDeckFactory } from './factories/GameDeckFactory';
 import { GameRoundFactory } from './factories/GameRoundFactory';
 import type { GameState } from '../models/game/Game';
+import type { GameCardId } from '../models/card/GameCardId';
 import { GameRound, GameRoundActionStatus } from '../models/game/GameRound';
 import type {
   BurstChannels,
@@ -10,6 +11,17 @@ import type {
 import { Hand } from '../models/hand/Hand';
 import type { GameRules } from '../models/rules/GameRules';
 import type { RandomSource } from './gateway/RandomSource';
+import { RoundNumber } from '../models/game/RoundNumber';
+import { RoundScore } from '../models/game/RoundScore';
+
+// 固定値から検証済みのラウンド番号を生成する。
+function createRoundNumber(value: number): RoundNumber {
+  const roundNumber = RoundNumber.create(value);
+  if (!(roundNumber instanceof RoundNumber)) {
+    throw new RangeError(`Invalid round number: ${roundNumber}`);
+  }
+  return roundNumber;
+}
 
 // 注入されたルールとFactoryを固定し、ゲーム全体の状態を遷移させる。
 export class GameEngine {
@@ -35,11 +47,11 @@ export class GameEngine {
 
   // 過去の結果を持たない第1ラウンドを開始する。
   startGame(): GameState {
-    return this.createRound(this.createInitialState(), 1);
+    return this.createRound(this.createInitialState(), createRoundNumber(1));
   }
 
   // 選択された候補カードの適用をGameRoundへ依頼し、ゲーム状態へ反映する。
-  acceptOfferedCard(state: GameState, cardId: string): GameState {
+  acceptOfferedCard(state: GameState, cardId: GameCardId): GameState {
     if (state.phase !== 'playing' || state.currentRound === null) return state;
     const action = state.currentRound.playCard({
       cardId,
@@ -87,10 +99,10 @@ export class GameEngine {
     if (state.phase !== 'roundFinished' || state.currentRound === null) {
       return state;
     }
-    if (state.currentRound.roundNumber >= this.rules.totalRounds) {
+    if (state.currentRound.roundNumber.value >= this.rules.totalRounds) {
       return { ...state, phase: 'gameFinished' };
     }
-    return this.createRound(state, state.currentRound.roundNumber + 1);
+    return this.createRound(state, state.currentRound.roundNumber.next());
   }
 
   // 同じルールを保持した未開始状態へ戻す。
@@ -99,7 +111,7 @@ export class GameEngine {
   }
 
   // Factoryへ開始状態の生成を依頼して指定ラウンドへ遷移する。
-  private createRound(state: GameState, roundNumber: number): GameState {
+  private createRound(state: GameState, roundNumber: RoundNumber): GameState {
     return {
       ...state,
       phase: 'playing',
@@ -152,7 +164,7 @@ export class GameEngine {
       finalHand: round.hand,
       burstHand,
       burstChannels,
-      score: 0,
+      score: RoundScore.zero(),
       endReason: 'burst',
     };
     return {

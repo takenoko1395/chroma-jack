@@ -58,14 +58,9 @@ export class Hand {
     );
     const burstChannels = new Set(this.clampedChannelSet);
     overflowedChannels.forEach((channel) => burstChannels.add(channel));
-    const resolvedColor = Color.create(
-      Math.max(0, attemptedChannels.red),
-      Math.max(0, attemptedChannels.green),
-      Math.max(0, attemptedChannels.blue),
+    const resolvedColor = this.color.mapChannels((_, channel) =>
+      Math.max(0, attemptedChannels[channel]),
     );
-    if (!(resolvedColor instanceof Color)) {
-      throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
-    }
     const attemptedHand = new Hand(resolvedColor, burstChannels);
     const endsRound =
       overflowedChannels.length > 0 &&
@@ -103,14 +98,9 @@ export class Hand {
       };
     }
 
-    const resolvedColor = Color.create(
-      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.red),
-      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.green),
-      Math.min(Hand.CHANNEL_LIMIT, attemptedColor.blue),
+    const resolvedColor = attemptedColor.mapChannels((channel) =>
+      Math.min(Hand.CHANNEL_LIMIT, channel),
     );
-    if (!(resolvedColor instanceof Color)) {
-      throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
-    }
     return {
       status: HandChangeStatus.Applied,
       hand: new Hand(resolvedColor, burstChannels),

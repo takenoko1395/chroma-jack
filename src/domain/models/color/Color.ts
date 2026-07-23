@@ -49,8 +49,26 @@ export class Color {
     return added;
   }
 
+  // 各RGB成分へ同じ変換規則を適用した検証済みColorを返す。
+  mapChannels(
+    transform: (value: number, channel: ColorChannel) => number,
+  ): Color {
+    const color = Color.create(
+      transform(this.red, ColorChannel.Red),
+      transform(this.green, ColorChannel.Green),
+      transform(this.blue, ColorChannel.Blue),
+    );
+    if (!(color instanceof Color)) {
+      throw new RangeError(
+        `Color transformation violated an invariant: ${color}`,
+      );
+    }
+    return color;
+  }
+
   // すべての色成分が0かどうかを返す。
   isBlack(): boolean {
     return this.red === 0 && this.green === 0 && this.blue === 0;
   }
 }
+import { ColorChannel } from './ColorChannel';

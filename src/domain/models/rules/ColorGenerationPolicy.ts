@@ -1,5 +1,6 @@
 import type { RandomSource } from '../../usecases/gateway/RandomSource';
 import type { IntegerRange } from '../shared/IntegerRange';
+import { Color } from '../color/Color';
 
 // 範囲内の乱数をどちら側へ偏らせるかを示す。
 export enum ColorGenerationTrend {
@@ -16,8 +17,21 @@ export class ColorGenerationPolicy {
   // 色成分の生成時に使用する偏りを固定する。
   constructor(readonly trend: ColorGenerationTrend) {}
 
-  // 設定された傾向に従って範囲内の色成分を生成する。
-  generateChannel(range: IntegerRange, random: RandomSource): number {
+  // 設定された傾向に従う検証済みRGB色を生成する。
+  generateColor(range: IntegerRange, random: RandomSource): Color {
+    const color = Color.create(
+      this.generateChannel(range, random),
+      this.generateChannel(range, random),
+      this.generateChannel(range, random),
+    );
+    if (!(color instanceof Color)) {
+      throw new RangeError(`Random source violated the color range: ${color}`);
+    }
+    return color;
+  }
+
+  // 設定された傾向に従って1つの色成分を生成する。
+  private generateChannel(range: IntegerRange, random: RandomSource): number {
     const first = random.nextInteger(range);
     if (this.trend === ColorGenerationTrend.Uniform) return first;
 

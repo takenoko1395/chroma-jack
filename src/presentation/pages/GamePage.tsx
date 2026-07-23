@@ -1,6 +1,7 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { GameState } from '../../domain/models/game/Game';
+import type { GameCardId } from '../../domain/models/card/GameCardId';
 import { ActionButtons } from '../widgets/ActionButtons';
 import { CardOffer } from '../widgets/CardOffer';
 import { ColorPanel } from '../widgets/ColorPanel';
@@ -12,7 +13,7 @@ type GamePageProps = {
   game: GameState;
   totalRounds: number;
   totalScore: number;
-  onAccept: (cardId: string) => void;
+  onAccept: (cardId: GameCardId) => void;
   onDiscard: () => void;
   onStand: () => void;
   onContinue: () => void;
@@ -41,7 +42,7 @@ export function GamePage({
   return (
     <Container maxWidth="lg" component="main" sx={{ py: { xs: 2.5, sm: 4 } }}>
       <GameStatus
-        currentRound={round?.roundNumber ?? 0}
+        currentRound={round?.roundNumber.value ?? 0}
         totalRounds={totalRounds}
         totalScore={totalScore}
         cardsRemaining={cardsRemaining}
@@ -73,7 +74,7 @@ export function GamePage({
       >
         {game.phase === 'playing'
           ? t('game.statusAnnouncement', {
-              round: round?.roundNumber ?? 0,
+              round: round?.roundNumber.value ?? 0,
               cards: cardsRemaining,
             })
           : ''}
@@ -88,10 +89,10 @@ export function GamePage({
                 })}
               </Typography>
             )}
-            {round && round.burstPreventionCount > 0 && (
+            {round && round.burstPreventionCount.hasAny() && (
               <Typography role="status" sx={{ mt: 2, textAlign: 'center' }}>
                 {t('game.burstPrevention', {
-                  count: round.burstPreventionCount,
+                  count: round.burstPreventionCount.value,
                 })}
               </Typography>
             )}
@@ -101,7 +102,7 @@ export function GamePage({
         {game.phase === 'roundFinished' && result && (
           <RoundResult
             result={result}
-            isLastRound={round?.roundNumber === totalRounds}
+            isLastRound={round?.roundNumber.value === totalRounds}
             onContinue={onContinue}
           />
         )}

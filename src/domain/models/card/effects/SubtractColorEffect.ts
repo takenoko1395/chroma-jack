@@ -1,4 +1,4 @@
-import type { Color } from '../../color/Color';
+import type { CardColorAmount } from '../CardColorAmount';
 import { HandChangeStatus } from '../../hand/Hand';
 import {
   createHandEffectResult,
@@ -13,12 +13,12 @@ export class SubtractColorEffect implements CardEffectContract {
   readonly kind = CardEffectKind.SubtractColor;
 
   // RGBから取り除く各成分量を保持する。
-  constructor(readonly amount: Color) {}
+  constructor(readonly amount: CardColorAmount) {}
 
   // 減算量をHandへ渡し、Hand側の下限・バーストルールを適用する。
   applyTo(context: CardEffectContext): CardEffectResult {
     const subtraction = context.hand.subtractColor(
-      this.amount,
+      this.amount.color,
       context.overflowPolicy,
     );
     if (
@@ -26,7 +26,7 @@ export class SubtractColorEffect implements CardEffectContract {
       context.canPreventBurst
     ) {
       const prevented = context.hand.subtractColor(
-        this.amount,
+        this.amount.color,
         context.overflowPolicy,
         true,
       );

@@ -3,12 +3,12 @@
 ## Project overview
 
 `chroma-jack` is a game prototype in which players judge colors visually and try to
-move the current color toward white. Players draw color cards and choose whether to
-add or discard them; exceeding the limit of any RGB component causes a burst.
+move the current color toward a rule-specific target. Players draw color cards and
+choose whether to apply or discard them; crossing an RGB boundary causes a burst.
 
 The prototype should validate whether color-only decisions are enjoyable, whether
-approaching white feels rewarding, whether bursting creates tension, and whether
-the game remains understandable without numeric values.
+approaching the target feels rewarding, whether bursting creates tension, and
+whether the game remains understandable without numeric values.
 
 ## Sources of truth
 
@@ -49,6 +49,14 @@ the game remains understandable without numeric values.
 
 - Represent validated domain values with value objects instead of passing raw
   primitives and repeating validation at call sites.
+- Do not pass raw primitives across domain model, use-case, or gateway boundaries
+  when the value has a domain meaning or invariant. Convert raw input to a value
+  object at the system boundary, then pass the validated object internally.
+- Constructors and factories that create a value object are the allowed boundary
+  for its raw input. Local loop indexes and short-lived calculation intermediates
+  do not require value objects when they never cross an object boundary.
+- Use distinct value-object types for identifiers from different domains, such as
+  card IDs and rule IDs, rather than a generic interchangeable ID wrapper.
 - Avoid project-specific `Error` classes and generic Rust-inspired `Result<T, E>`
   abstractions. Represent expected validation failures and business outcomes with
   small, domain-specific enums and discriminated unions.

@@ -74,8 +74,8 @@ describe('Hand', () => {
   });
 
   it('白を1000点、黒を0点にする', () => {
-    expect(scoring.calculate(createHand(255, 255, 255))).toBe(1000);
-    expect(scoring.calculate(createHand(0, 0, 0))).toBe(0);
+    expect(scoring.calculate(createHand(255, 255, 255)).value).toBe(1000);
+    expect(scoring.calculate(createHand(0, 0, 0)).value).toBe(0);
   });
 
   it('黒を目標にすると黒を1000点、白を0点にする', () => {
@@ -85,8 +85,8 @@ describe('Hand', () => {
       target: ScoreTarget.Black,
     });
 
-    expect(blackScoring.calculate(createHand(0, 0, 0))).toBe(1000);
-    expect(blackScoring.calculate(createHand(255, 255, 255))).toBe(0);
+    expect(blackScoring.calculate(createHand(0, 0, 0)).value).toBe(1000);
+    expect(blackScoring.calculate(createHand(255, 255, 255)).value).toBe(0);
   });
 
   it('超過成分を255へ固定して続行し、スコア上限を下げる', () => {
@@ -101,7 +101,7 @@ describe('Hand', () => {
       blue: 255,
     });
     expect(addition.hand.clampedChannels.size).toBe(1);
-    expect(scoring.calculate(addition.hand)).toBe(800);
+    expect(scoring.calculate(addition.hand).value).toBe(800);
   });
 
   it('許容色数までは固定して続行し、超えると累計色数でバーストする', () => {
@@ -175,8 +175,8 @@ describe('Hand', () => {
   });
 
   it('白に近い色ほど高い整数スコアにする', () => {
-    const middle = scoring.calculate(createHand(100, 100, 100));
-    const nearWhite = scoring.calculate(createHand(230, 230, 230));
+    const middle = scoring.calculate(createHand(100, 100, 100)).value;
+    const nearWhite = scoring.calculate(createHand(230, 230, 230)).value;
     expect(Number.isInteger(middle)).toBe(true);
     expect(nearWhite).toBeGreaterThan(middle);
   });

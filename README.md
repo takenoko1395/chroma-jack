@@ -68,7 +68,7 @@ npm run build
 - `src/presentation/router`: アプリケーション状態に基づく画面切り替え
 - `src/presentation/widgets`: 再利用可能な表示・操作部品
 
-ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameDeckFactory`がカードと山札、`GameRoundFactory`が初期Handと候補、`GameEngine`がゲーム進行を担当します。`GameEngine`はゲーム開始時に注入された`GameRules`を保持し、内部のFactoryは同じ`RandomSource`を共有するため、ゲーム途中でルールや乱数供給源が変わりません。通常プレイではブラウザ乱数を使い、デバッグや山札検証ではシード付き実装へ差し替えられます。初期色範囲、色生成傾向、通常カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
+ゲームロジックはReactやブラウザAPIに依存しません。値の検証とビジネスルールは責任を持つDomain Modelへ集約しています。意味や制約を持つID、RGB変化量、ラウンド番号、得点は生成境界でValue Objectへ変換し、Domain内では生の値へ戻さず受け渡します。想定内の生成失敗やゲーム結果は独自Errorではなくenumで表現します。`GameDeckFactory`がカードと山札、`GameRoundFactory`が初期Handと候補、`GameEngine`がゲーム進行を担当します。`GameEngine`はゲーム開始時に注入された`GameRules`を保持し、内部のFactoryは同じ`RandomSource`を共有するため、ゲーム途中でルールや乱数供給源が変わりません。通常プレイではブラウザ乱数を使い、デバッグや山札検証ではシード付き実装へ差し替えられます。初期色範囲、色生成傾向、通常カードの山札構成、カード種類ごとの出現率、許容バースト色数、スコア計算を個別に差し替えられます。
 
 ### ルールの差し替え
 

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { Color } from '../../color/Color';
 import { ColorChannel } from '../../color/ColorChannel';
 import { Hand } from '../../hand/Hand';
 import { OverflowPolicy } from '../../rules/OverflowPolicy';
@@ -8,6 +7,10 @@ import { AdjustColorEffect } from './AdjustColorEffect';
 import { AdjustSaturationEffect } from './AdjustSaturationEffect';
 import type { CardEffectContext } from './CardEffect';
 import { SwapColorChannelsEffect } from './SwapColorChannelsEffect';
+import {
+  createColor,
+  createColorAdjustment,
+} from '../../../../test/helpers/createDomainValue';
 
 // 指定色を持つカード効果テスト用Contextを生成する。
 function createContext(
@@ -15,10 +18,8 @@ function createContext(
   green: number,
   blue: number,
 ): CardEffectContext {
-  const color = Color.create(red, green, blue);
-  if (!(color instanceof Color)) throw new Error('Invalid test color');
   return {
-    hand: new Hand(color),
+    hand: new Hand(createColor(red, green, blue)),
     overflowPolicy: OverflowPolicy.classic(),
     canPreventBurst: false,
   };
@@ -26,22 +27,20 @@ function createContext(
 
 describe('color card effects', () => {
   it('RGBの一部を増減し、減算結果を0で止める', () => {
-    const result = new AdjustColorEffect({
-      red: 20,
-      green: -30,
-      blue: 0,
-    }).applyTo(createContext(10, 20, 30));
+    const result = new AdjustColorEffect(
+      createColorAdjustment({ red: 20, green: -30, blue: 0 }),
+    ).applyTo(createContext(10, 20, 30));
 
     expect(result.hand.color).toMatchObject({ red: 30, green: 0, blue: 30 });
   });
 
-  it('生成後に入力オブジェクトを変更されてもRGB増減量を維持する', () => {
-    const delta = { red: 20, green: 0, blue: 0 };
-    const effect = new AdjustColorEffect(delta);
-    delta.red = 200;
+  it('検証済みRGB差分をそのまま効果へ保持する', () => {
+    const adjustment = createColorAdjustment({ red: 20, green: 0, blue: 0 });
+    const effect = new AdjustColorEffect(adjustment);
 
     const result = effect.applyTo(createContext(10, 20, 30));
 
+    expect(effect.delta).toBe(adjustment);
     expect(result.hand.color.red).toBe(30);
   });
 

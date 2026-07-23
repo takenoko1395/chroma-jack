@@ -1,4 +1,3 @@
-import { Color } from '../../color/Color';
 import {
   createHandEffectResult,
   CardEffectKind,
@@ -19,13 +18,9 @@ export class AdjustBrightnessEffect implements CardEffectContract {
 
   // 各成分を0から255へ収めながら明度を変更する。
   applyTo(context: CardEffectContext): CardEffectResult {
-    const color = Color.create(
-      Math.min(255, Math.max(0, context.hand.color.red + this.amount)),
-      Math.min(255, Math.max(0, context.hand.color.green + this.amount)),
-      Math.min(255, Math.max(0, context.hand.color.blue + this.amount)),
+    const color = context.hand.color.mapChannels((channel) =>
+      Math.min(255, Math.max(0, channel + this.amount)),
     );
-    if (!(color instanceof Color))
-      throw new RangeError(`Invalid brightness color: ${color}`);
     const change = context.hand.changeColor(color, context.overflowPolicy);
     return createHandEffectResult(change.hand, null, false);
   }

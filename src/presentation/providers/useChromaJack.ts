@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { GameScore } from '../../domain/models/game/GameScore';
+import type { GameCardId } from '../../domain/models/card/GameCardId';
 import type { GameRules } from '../../domain/models/rules/GameRules';
 import { GameEngine } from '../../domain/usecases/GameEngine';
 import { BrowserRandomSource } from '../../gateway/random/BrowserRandomSource';
@@ -21,7 +22,7 @@ export function useChromaJack(rules: GameRules) {
     setGame(engine.current.startGame());
   }, []);
   const acceptCard = useCallback(
-    (cardId: string) =>
+    (cardId: GameCardId) =>
       setGame((current) => engine.current.acceptOfferedCard(current, cardId)),
     [],
   );

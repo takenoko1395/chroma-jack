@@ -6,6 +6,10 @@ import type { RoundResult as RoundResultModel } from '../../domain/models/game/R
 import { Hand } from '../../domain/models/hand/Hand';
 import { AppProviders } from '../providers/AppProviders';
 import { RoundResult } from './RoundResult';
+import {
+  createRoundNumber,
+  createRoundScore,
+} from '../../test/helpers/createDomainValue';
 
 function createHand(red: number, green: number, blue: number): Hand {
   const color = Color.create(red, green, blue);
@@ -24,11 +28,11 @@ function renderResult(result: RoundResultModel) {
 describe('RoundResult', () => {
   it('通常終了後に確定した色の数値を表示する', () => {
     renderResult({
-      roundNumber: 1,
+      roundNumber: createRoundNumber(1),
       finalHand: createHand(10, 20, 30),
       burstHand: null,
       burstChannels: null,
-      score: 100,
+      score: createRoundScore(100),
       endReason: 'stood',
     });
 
@@ -40,11 +44,11 @@ describe('RoundResult', () => {
 
   it('バースト後にカード適用後の色の数値を表示する', () => {
     renderResult({
-      roundNumber: 1,
+      roundNumber: createRoundNumber(1),
       finalHand: createHand(250, 10, 10),
       burstHand: createHand(256, 11, 11),
       burstChannels: [ColorChannel.Red],
-      score: 0,
+      score: createRoundScore(0),
       endReason: 'burst',
     });
 

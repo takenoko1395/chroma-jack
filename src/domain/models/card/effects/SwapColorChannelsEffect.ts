@@ -1,4 +1,3 @@
-import { Color } from '../../color/Color';
 import type { ColorChannel } from '../../color/ColorChannel';
 import {
   createHandEffectResult,
@@ -31,9 +30,9 @@ export class SwapColorChannelsEffect implements CardEffectContract {
       values[this.second],
       values[this.first],
     ];
-    const color = Color.create(values.red, values.green, values.blue);
-    if (!(color instanceof Color))
-      throw new RangeError(`Invalid swapped color: ${color}`);
+    const color = context.hand.color.mapChannels(
+      (_, channel) => values[channel],
+    );
     const change = context.hand.changeColor(color, context.overflowPolicy);
     return createHandEffectResult(change.hand, null, false);
   }

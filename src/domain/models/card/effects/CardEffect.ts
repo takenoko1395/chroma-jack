@@ -9,11 +9,14 @@ import type {
   RevealColorValuesEffect,
 } from './RoundModifierEffects';
 import type { SwapColorChannelsEffect } from './SwapColorChannelsEffect';
+import type { SubtractColorEffect } from './SubtractColorEffect';
 
 // カード効果の種類を示し、実行処理と表示変換の判別子として使用する。
 export enum CardEffectKind {
   // RGB値を加算する通常効果。
   AddColor = 'addColor',
+  // RGB値を減算する通常効果。PresentationではCMY色として表現できる。
+  SubtractColor = 'subtractColor',
   // RGBの一部を増減する効果。
   AdjustChannels = 'adjustChannels',
   // 2つのRGB成分を交換する効果。
@@ -53,6 +56,7 @@ export interface CardEffectContract {
 // 実装済みカード効果をkindで型安全に判別できるUnion。
 export type CardEffect =
   | AddColorEffect
+  | SubtractColorEffect
   | AdjustColorEffect
   | SwapColorChannelsEffect
   | AdjustSaturationEffect

@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { IntegerRange } from '../shared/IntegerRange';
 import { GameRules } from './GameRules';
-import { AddColorDeckMode } from './AddColorDeckMode';
+import { ColorDeckMode } from './ColorDeckMode';
+import { ScoreTarget } from './ScorePolicy';
 
 describe('GameRules', () => {
+  it('RGB加算は白、CMY減算は黒を目標にする', () => {
+    const rgb = GameRules.classic();
+    const cmy = GameRules.cmySubtractive();
+
+    expect(rgb.colorDeckMode).toBe(ColorDeckMode.BalancedChannels);
+    expect(rgb.scorePolicy.target).toBe(ScoreTarget.White);
+    expect(cmy.colorDeckMode).toBe(ColorDeckMode.BalancedChannels);
+    expect(cmy.scorePolicy.target).toBe(ScoreTarget.Black);
+  });
+
   it('オブジェクト引数から各設定を名前どおり保持する', () => {
     const rules = GameRules.clampChallenge();
 
@@ -34,7 +45,7 @@ describe('GameRules', () => {
           cardColorRange: blackOnlyRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-          addColorDeckMode: base.addColorDeckMode,
+          colorDeckMode: base.colorDeckMode,
           cardTypeDistribution: base.cardTypeDistribution,
           overflowPolicy: base.overflowPolicy,
           scorePolicy: base.scorePolicy,
@@ -56,7 +67,7 @@ describe('GameRules', () => {
           cardColorRange: base.cardColorRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-          addColorDeckMode: base.addColorDeckMode,
+          colorDeckMode: base.colorDeckMode,
           cardTypeDistribution: base.cardTypeDistribution,
           overflowPolicy: base.overflowPolicy,
           scorePolicy: base.scorePolicy,
@@ -64,7 +75,7 @@ describe('GameRules', () => {
     ).toThrow(RangeError);
   });
 
-  it('各色を主成分として同数にできない山札枚数を拒否する', () => {
+  it('CMYを同数にできない山札枚数を拒否する', () => {
     const base = GameRules.classic();
 
     expect(
@@ -78,7 +89,7 @@ describe('GameRules', () => {
           cardColorRange: base.cardColorRange,
           initialColorGenerationPolicy: base.initialColorGenerationPolicy,
           cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-          addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
+          colorDeckMode: ColorDeckMode.BalancedChannels,
           cardTypeDistribution: base.cardTypeDistribution,
           overflowPolicy: base.overflowPolicy,
           scorePolicy: base.scorePolicy,

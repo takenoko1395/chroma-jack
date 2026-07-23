@@ -38,7 +38,7 @@ describe('RoundResult', () => {
     expect(values).toHaveTextContent('B30');
   });
 
-  it('バースト後に加算後の色の数値を表示する', () => {
+  it('バースト後にカード適用後の色の数値を表示する', () => {
     renderResult({
       roundNumber: 1,
       finalHand: createHand(250, 10, 10),
@@ -48,7 +48,9 @@ describe('RoundResult', () => {
       endReason: 'burst',
     });
 
-    const values = screen.getByLabelText('加算後の色（バーストした値）の数値');
+    const values = screen.getByLabelText(
+      'カード適用後の色（バーストした値）の数値',
+    );
     expect(values).toHaveTextContent('R256');
     expect(values).toHaveTextContent('G11');
     expect(values).toHaveTextContent('B11');

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Color } from '../color/Color';
 import { ColorChannel } from '../color/ColorChannel';
 import { OverflowPolicy } from '../rules/OverflowPolicy';
-import { ScorePolicy } from '../rules/ScorePolicy';
-import { Hand, HandAdditionStatus } from './Hand';
+import { ScorePolicy, ScoreTarget } from '../rules/ScorePolicy';
+import { Hand, HandChangeStatus } from './Hand';
 
 function createHand(red: number, green: number, blue: number): Hand {
   const color = Color.create(red, green, blue);
@@ -19,14 +19,18 @@ function createAmount(red: number, green: number, blue: number): Color {
 
 describe('Hand', () => {
   const endRound = OverflowPolicy.classic();
-  const scoring = new ScorePolicy(1000, 200);
+  const scoring = new ScorePolicy({
+    maximumScore: 1000,
+    clampPenalty: 200,
+    target: ScoreTarget.White,
+  });
 
   it('カード加算とバースト判定を自身のロジックとして行う', () => {
     const safeAddition = createHand(250, 250, 250).addColor(
       createAmount(5, 5, 5),
       endRound,
     );
-    expect(safeAddition.status).toBe(HandAdditionStatus.Added);
+    expect(safeAddition.status).toBe(HandChangeStatus.Applied);
     expect(safeAddition.hand.color).toMatchObject({
       red: 255,
       green: 255,
@@ -37,11 +41,35 @@ describe('Hand', () => {
       createAmount(1, 1, 1),
       endRound,
     );
-    expect(burstAddition.status).toBe(HandAdditionStatus.Burst);
+    expect(burstAddition.status).toBe(HandChangeStatus.Burst);
     expect(burstAddition.hand.color).toMatchObject({
       red: 256,
       green: 256,
       blue: 256,
+    });
+  });
+
+  it('CMY減算と0未満のバースト判定を自身のロジックとして行う', () => {
+    const amount = createAmount(5, 5, 5);
+    const burstAmount = createAmount(1, 1, 1);
+
+    const safeSubtraction = createHand(5, 5, 5).subtractColor(amount, endRound);
+    expect(safeSubtraction.status).toBe(HandChangeStatus.Applied);
+    expect(safeSubtraction.hand.color).toMatchObject({
+      red: 0,
+      green: 0,
+      blue: 0,
+    });
+
+    const burstSubtraction = safeSubtraction.hand.subtractColor(
+      burstAmount,
+      endRound,
+    );
+    expect(burstSubtraction.status).toBe(HandChangeStatus.Burst);
+    expect(burstSubtraction.hand.color).toMatchObject({
+      red: 0,
+      green: 0,
+      blue: 0,
     });
   });
 
@@ -50,12 +78,23 @@ describe('Hand', () => {
     expect(scoring.calculate(createHand(0, 0, 0))).toBe(0);
   });
 
+  it('黒を目標にすると黒を1000点、白を0点にする', () => {
+    const blackScoring = new ScorePolicy({
+      maximumScore: 1000,
+      clampPenalty: 0,
+      target: ScoreTarget.Black,
+    });
+
+    expect(blackScoring.calculate(createHand(0, 0, 0))).toBe(1000);
+    expect(blackScoring.calculate(createHand(255, 255, 255))).toBe(0);
+  });
+
   it('超過成分を255へ固定して続行し、スコア上限を下げる', () => {
     const addition = createHand(250, 255, 255).addColor(
       createAmount(10, 0, 0),
       OverflowPolicy.clampAndContinue(1),
     );
-    expect(addition.status).toBe(HandAdditionStatus.Added);
+    expect(addition.status).toBe(HandChangeStatus.Applied);
     expect(addition.hand.color).toMatchObject({
       red: 255,
       green: 255,
@@ -71,14 +110,14 @@ describe('Hand', () => {
       createAmount(10, 0, 0),
       policy,
     );
-    expect(redOverflow.status).toBe(HandAdditionStatus.Added);
+    expect(redOverflow.status).toBe(HandChangeStatus.Applied);
     expect(redOverflow.hand.color.red).toBe(255);
 
     const greenOverflow = redOverflow.hand.addColor(
       createAmount(0, 10, 0),
       policy,
     );
-    expect(greenOverflow.status).toBe(HandAdditionStatus.Burst);
+    expect(greenOverflow.status).toBe(HandChangeStatus.Burst);
     expect(greenOverflow.hand.clampedChannels).toEqual(
       new Set([ColorChannel.Red, ColorChannel.Green]),
     );
@@ -92,7 +131,7 @@ describe('Hand', () => {
     );
     const second = first.hand.addColor(createAmount(10, 0, 0), policy);
 
-    expect(second.status).toBe(HandAdditionStatus.Added);
+    expect(second.status).toBe(HandChangeStatus.Applied);
     expect(second.hand.clampedChannels).toEqual(new Set([ColorChannel.Red]));
   });
 
@@ -105,9 +144,9 @@ describe('Hand', () => {
     const second = first.hand.addColor(createAmount(0, 10, 0), policy);
     const third = second.hand.addColor(createAmount(0, 0, 10), policy);
 
-    expect(first.status).toBe(HandAdditionStatus.Added);
-    expect(second.status).toBe(HandAdditionStatus.Added);
-    expect(third.status).toBe(HandAdditionStatus.Burst);
+    expect(first.status).toBe(HandChangeStatus.Applied);
+    expect(second.status).toBe(HandChangeStatus.Applied);
+    expect(third.status).toBe(HandChangeStatus.Burst);
     expect(third.hand.clampedChannels.size).toBe(3);
   });
 
@@ -117,7 +156,7 @@ describe('Hand', () => {
       OverflowPolicy.clampAndContinue(1),
     );
 
-    expect(addition.status).toBe(HandAdditionStatus.Burst);
+    expect(addition.status).toBe(HandChangeStatus.Burst);
     expect(addition.hand.clampedChannels.size).toBe(2);
   });
 

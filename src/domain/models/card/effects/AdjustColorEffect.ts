@@ -1,5 +1,5 @@
 import { Color } from '../../color/Color';
-import { HandAdditionStatus } from '../../hand/Hand';
+import { HandChangeStatus } from '../../hand/Hand';
 import {
   createHandEffectResult,
   CardEffectKind,
@@ -41,7 +41,7 @@ export class AdjustColorEffect implements CardEffectContract {
     if (!(color instanceof Color))
       throw new RangeError(`Invalid adjusted color: ${color}`);
     const change = context.hand.changeColor(color, context.overflowPolicy);
-    if (change.status === HandAdditionStatus.Burst && context.canPreventBurst) {
+    if (change.status === HandChangeStatus.Burst && context.canPreventBurst) {
       const prevented = context.hand.changeColor(
         color,
         context.overflowPolicy,
@@ -50,8 +50,8 @@ export class AdjustColorEffect implements CardEffectContract {
       return createHandEffectResult(prevented.hand, null, true);
     }
     return createHandEffectResult(
-      change.status === HandAdditionStatus.Burst ? context.hand : change.hand,
-      change.status === HandAdditionStatus.Burst ? change.hand : null,
+      change.status === HandChangeStatus.Burst ? context.hand : change.hand,
+      change.status === HandChangeStatus.Burst ? change.hand : null,
       false,
     );
   }

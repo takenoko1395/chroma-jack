@@ -10,10 +10,12 @@ import {
 } from '../rules/SelectableGameRule';
 
 const CLASSIC_RULES = GameRules.classic();
+const CMY_SUBTRACTIVE_RULES = GameRules.cmySubtractive();
 const CLAMP_CHALLENGE_RULES = GameRules.clampChallenge();
 const SPECIAL_DECK_RULES = GameRules.specialDeck();
 const BUILT_IN_RULE_OPTIONS = createBuiltInRuleOptions({
   classic: CLASSIC_RULES,
+  cmySubtractive: CMY_SUBTRACTIVE_RULES,
   clampChallenge: CLAMP_CHALLENGE_RULES,
   specialDeck: SPECIAL_DECK_RULES,
 });

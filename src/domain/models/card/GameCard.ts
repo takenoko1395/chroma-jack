@@ -2,6 +2,7 @@ import { Color } from '../color/Color';
 import type { Hand } from '../hand/Hand';
 import type { OverflowPolicy } from '../rules/OverflowPolicy';
 import { AddColorEffect } from './effects/AddColorEffect';
+import { SubtractColorEffect } from './effects/SubtractColorEffect';
 import type { CardEffect, CardEffectResult } from './effects/CardEffect';
 
 // ゲームカードを生成できなかった理由を示す。
@@ -50,10 +51,33 @@ export class GameCard {
     return new GameCard({ id, effect: new AddColorEffect(color) });
   }
 
+  // RGB減算量を持つカードの入力を検証し、カードまたは生成失敗理由を返す。
+  static createSubtractColor(
+    id: string,
+    red: number,
+    green: number,
+    blue: number,
+  ): GameCard | GameCardCreationFailure {
+    if (id.trim().length === 0) return GameCardCreationFailure.EmptyId;
+    const color = Color.create(red, green, blue);
+    if (!(color instanceof Color)) {
+      return GameCardCreationFailure.InvalidChannel;
+    }
+    if (
+      [color.red, color.green, color.blue].some(
+        (channel) => channel > GameCard.MAXIMUM_CHANNEL,
+      )
+    ) {
+      return GameCardCreationFailure.InvalidChannel;
+    }
+    if (color.isBlack()) return GameCardCreationFailure.Black;
+    return new GameCard({ id, effect: new SubtractColorEffect(color) });
+  }
+
   // 検証済みの特殊効果を持つカードを生成する。
   static createSpecial(args: {
     id: string;
-    effect: Exclude<CardEffect, AddColorEffect>;
+    effect: Exclude<CardEffect, AddColorEffect | SubtractColorEffect>;
   }): GameCard | GameCardCreationFailure {
     if (args.id.trim().length === 0) return GameCardCreationFailure.EmptyId;
     return new GameCard(args);

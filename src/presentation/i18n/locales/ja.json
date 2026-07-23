@@ -1,15 +1,19 @@
 {
   "language": { "label": "表示言語", "ja": "日本語", "en": "English" },
   "title": {
-    "tagline": "色を重ねて、白に近づけよう。",
+    "tagline": "色だけを頼りに、目標色へ近づこう。",
     "trust": "数字ではなく、色だけを信じてください。",
     "rulesLabel": "ゲームルール",
     "start": "ゲームを始める"
   },
   "rules": {
     "classic": {
-      "label": "Classic",
-      "description": "候補は1枚ずつ公開され、色を加えすぎるとその時点でラウンド終了です。"
+      "label": "RGB Additive",
+      "description": "RGBを加算して白を目指します。色を加えすぎるとその時点でラウンド終了です。"
+    },
+    "cmySubtractive": {
+      "label": "CMY Subtractive",
+      "description": "CMYでRGBを減算して黒を目指します。色を引きすぎるとその時点でラウンド終了です。"
     },
     "clampChallenge": {
       "label": "Clamp Challenge",
@@ -43,6 +47,7 @@
   },
   "cards": {
     "addColor": "RGB加算",
+    "subtractColor": "CMY減算",
     "adjustChannels": "RGB増減",
     "swapChannels": "成分交換",
     "adjustSaturation": "彩度操作",
@@ -64,10 +69,10 @@
     "finished": "ラウンド終了",
     "burst": "バースト",
     "burstCount": "{{count}}色バースト",
-    "burstDetail": "{{count}}つの色成分が上限を超えました",
+    "burstDetail": "{{count}}つの色成分が限界を超えました",
     "deckExhausted": "山札を使い切りました",
     "stood": "ここで色を確定しました",
-    "burstColor": "加算後の色（バーストした値）",
+    "burstColor": "カード適用後の色（バーストした値）",
     "finalColor": "確定した色",
     "colorValues": "{{label}}の数値",
     "viewResults": "結果を見る",

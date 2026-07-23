@@ -2,22 +2,22 @@ import { Color } from '../color/Color';
 import { COLOR_CHANNELS, type ColorChannel } from '../color/ColorChannel';
 import type { OverflowPolicy } from '../rules/OverflowPolicy';
 
-// カード加算後にラウンドを継続できるかを示す。
-export enum HandAdditionStatus {
-  // 加算を反映し、ラウンドを継続できる。
-  Added = 'added',
-  // 終了対象の成分が上限を超え、ラウンドが終了する。
+// カードによる色変更後にラウンドを継続できるかを示す。
+export enum HandChangeStatus {
+  // 色変更を反映し、ラウンドを継続できる。
+  Applied = 'applied',
+  // 終了対象の成分が上限または下限を超え、ラウンドが終了する。
   Burst = 'burst',
 }
 
-// カード加算後の手札と超過した成分をまとめた結果。
-export type HandAddition = Readonly<{
-  status: HandAdditionStatus;
+// カードによる色変更後の手札と境界を超えた成分をまとめた結果。
+export type HandChange = Readonly<{
+  status: HandChangeStatus;
   hand: Hand;
   overflowedChannels: readonly ColorChannel[];
 }>;
 
-// 現在色とクランプ履歴を保持し、カード加算ルールを実行するモデル。
+// 現在色とクランプ履歴を保持し、カードによる色変更を実行するモデル。
 export class Hand {
   static readonly CHANNEL_LIMIT = 255;
   private readonly clampedChannelSet: ReadonlySet<ColorChannel>;
@@ -38,8 +38,44 @@ export class Hand {
   }
 
   // Policyに従って色を加算し、継続またはバースト結果を返す。
-  addColor(amount: Color, overflowPolicy: OverflowPolicy): HandAddition {
+  addColor(amount: Color, overflowPolicy: OverflowPolicy): HandChange {
     return this.changeColor(this.color.add(amount), overflowPolicy);
+  }
+
+  // RGB各成分を減算し、下限到達またはバースト結果を返す。
+  subtractColor(
+    amount: Color,
+    overflowPolicy: OverflowPolicy,
+    preventBurst = false,
+  ): HandChange {
+    const attemptedChannels = {
+      red: this.color.red - amount.red,
+      green: this.color.green - amount.green,
+      blue: this.color.blue - amount.blue,
+    };
+    const overflowedChannels = COLOR_CHANNELS.filter(
+      (channel) => attemptedChannels[channel] < 0,
+    );
+    const burstChannels = new Set(this.clampedChannelSet);
+    overflowedChannels.forEach((channel) => burstChannels.add(channel));
+    const resolvedColor = Color.create(
+      Math.max(0, attemptedChannels.red),
+      Math.max(0, attemptedChannels.green),
+      Math.max(0, attemptedChannels.blue),
+    );
+    if (!(resolvedColor instanceof Color)) {
+      throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
+    }
+    const attemptedHand = new Hand(resolvedColor, burstChannels);
+    const endsRound =
+      overflowedChannels.length > 0 &&
+      !preventBurst &&
+      !overflowPolicy.canContinueWith(burstChannels.size);
+    return {
+      status: endsRound ? HandChangeStatus.Burst : HandChangeStatus.Applied,
+      hand: attemptedHand,
+      overflowedChannels,
+    };
   }
 
   // Policyに従って次の色へ変更し、継続またはバースト結果を返す。
@@ -47,7 +83,7 @@ export class Hand {
     attemptedColor: Color,
     overflowPolicy: OverflowPolicy,
     preventBurst = false,
-  ): HandAddition {
+  ): HandChange {
     const overflowedChannels = COLOR_CHANNELS.filter(
       (channel) => attemptedColor[channel] > Hand.CHANNEL_LIMIT,
     );
@@ -61,7 +97,7 @@ export class Hand {
 
     if (endsRound) {
       return {
-        status: HandAdditionStatus.Burst,
+        status: HandChangeStatus.Burst,
         hand: attemptedHand,
         overflowedChannels,
       };
@@ -76,7 +112,7 @@ export class Hand {
       throw new RangeError(`Invalid resolved color: ${resolvedColor}`);
     }
     return {
-      status: HandAdditionStatus.Added,
+      status: HandChangeStatus.Applied,
       hand: new Hand(resolvedColor, burstChannels),
       overflowedChannels,
     };

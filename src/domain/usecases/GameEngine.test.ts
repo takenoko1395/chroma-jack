@@ -8,7 +8,7 @@ import { GameRound } from '../models/game/GameRound';
 import { GameScore } from '../models/game/GameScore';
 import { Hand } from '../models/hand/Hand';
 import { GameRules } from '../models/rules/GameRules';
-import { AddColorDeckMode } from '../models/rules/AddColorDeckMode';
+import { ColorDeckMode } from '../models/rules/ColorDeckMode';
 import { IntegerRange } from '../models/shared/IntegerRange';
 import { GameEngine } from './GameEngine';
 
@@ -29,8 +29,20 @@ function createCard(
   return card;
 }
 
+// テスト用の通常CMY減算カードを生成する。
+function createSubtractCard(
+  id: string,
+  cyan: number,
+  magenta: number,
+  yellow: number,
+): GameCard {
+  const card = GameCard.createSubtractColor(id, cyan, magenta, yellow);
+  if (!(card instanceof GameCard)) throw new Error('Invalid test card');
+  return card;
+}
+
 describe('game actions', () => {
-  it('範囲内の初期色と各色が4枚ずつ主成分になる混色カードでラウンド1を始める', () => {
+  it('範囲内の初期色とRGBを均等に含む加算カードでラウンド1を始める', () => {
     const game = createEngine([0, 63, 127, 0]).startGame();
     const round = game.currentRound;
 
@@ -53,17 +65,12 @@ describe('game actions', () => {
       if (card.effect.kind !== CardEffectKind.AddColor) return;
       const channels = Object.values(card.effect.amount);
       const largestAmount = Math.max(...channels);
-      expect(largestAmount).toBeGreaterThanOrEqual(40);
-      expect(largestAmount).toBeLessThanOrEqual(120);
-      const supportAmounts = channels.filter(
-        (channel) => channel !== largestAmount,
-      );
-      expect(supportAmounts.every((channel) => channel <= 20)).toBe(true);
+      expect(channels.filter((channel) => channel > 20)).toHaveLength(1);
       if (card.effect.amount.red === largestAmount) cardCounts.red += 1;
       if (card.effect.amount.green === largestAmount) cardCounts.green += 1;
       if (card.effect.amount.blue === largestAmount) cardCounts.blue += 1;
     });
-    expect(cardCounts).toEqual({ red: 4, green: 4, blue: 4 });
+    expect(new Set(Object.values(cardCounts)).size).toBe(1);
   });
 
   it('加えると現在色を更新し、捨てると現在色を維持する', () => {
@@ -88,6 +95,37 @@ describe('game actions', () => {
 
     const discarded = engine.discardOffer(accepted);
     expect(discarded.currentRound?.hand).toBe(accepted.currentRound?.hand);
+  });
+
+  it('CMY減算カードを適用し、黒を目標に採点する', () => {
+    const rules = GameRules.cmySubtractive();
+    const engine = new GameEngine(rules, new FixedRandomSource([1]));
+    const currentColor = Color.create(100, 100, 100);
+    if (!(currentColor instanceof Color)) return;
+    const card = createSubtractCard('subtract', 40, 20, 10);
+    const initialHand = new Hand(currentColor);
+    const state: GameState = {
+      phase: 'playing',
+      currentRound: new GameRound({
+        roundNumber: 1,
+        hand: initialHand,
+        offeredCards: [card],
+        remainingDeck: [],
+      }),
+      roundResults: [],
+    };
+
+    const finished = engine.acceptOfferedCard(state, card.id);
+
+    expect(finished.phase).toBe('roundFinished');
+    expect(finished.currentRound?.hand.color).toMatchObject({
+      red: 60,
+      green: 80,
+      blue: 90,
+    });
+    expect(finished.roundResults[0]?.score).toBeGreaterThan(
+      rules.scorePolicy.calculate(initialHand),
+    );
   });
 
   it('止めるとスコアを確定する', () => {
@@ -175,7 +213,7 @@ describe('game actions', () => {
       cardColorRange: base.cardColorRange,
       initialColorGenerationPolicy: base.initialColorGenerationPolicy,
       cardColorGenerationPolicy: base.cardColorGenerationPolicy,
-      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
+      colorDeckMode: ColorDeckMode.BalancedChannels,
       cardTypeDistribution: base.cardTypeDistribution,
       overflowPolicy: base.overflowPolicy,
       scorePolicy: base.scorePolicy,

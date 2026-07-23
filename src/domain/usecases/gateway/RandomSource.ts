@@ -1,4 +1,4 @@
-import type { IntegerRange } from '../models/shared/IntegerRange';
+import type { IntegerRange } from '../../models/shared/IntegerRange';
 
 // Domainが必要とする範囲付き整数乱数の供給契約。
 export interface RandomSource {

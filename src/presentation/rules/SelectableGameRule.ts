@@ -10,6 +10,7 @@ export type SelectableGameRule = Readonly<{
 // 組み込みルールをアプリ全体で利用できる選択肢へ変換する。
 export function createBuiltInRuleOptions(args: {
   classic: GameRules;
+  cmySubtractive: GameRules;
   clampChallenge: GameRules;
   specialDeck: GameRules;
 }): readonly SelectableGameRule[] {
@@ -18,6 +19,11 @@ export function createBuiltInRuleOptions(args: {
       rules: args.classic,
       labelKey: 'rules.classic.label',
       descriptionKey: 'rules.classic.description',
+    },
+    {
+      rules: args.cmySubtractive,
+      labelKey: 'rules.cmySubtractive.label',
+      descriptionKey: 'rules.cmySubtractive.description',
     },
     {
       rules: args.clampChallenge,

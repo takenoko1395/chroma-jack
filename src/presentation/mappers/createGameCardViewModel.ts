@@ -17,6 +17,12 @@ export function createGameCardViewModel(card: GameCard): GameCardViewModel {
         titleKey: 'cards.addColor',
         backgroundColor: `rgb(${effect.amount.red}, ${effect.amount.green}, ${effect.amount.blue})`,
       };
+    case CardEffectKind.SubtractColor:
+      return {
+        id: card.id,
+        titleKey: 'cards.subtractColor',
+        backgroundColor: `rgb(${255 - effect.amount.red}, ${255 - effect.amount.green}, ${255 - effect.amount.blue})`,
+      };
     case CardEffectKind.AdjustChannels: {
       const changes = Object.entries(effect.delta).filter(
         ([, value]) => value !== 0,

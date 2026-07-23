@@ -12,7 +12,7 @@ import {
 } from '../../models/card/effects/RoundModifierEffects';
 import { SwapColorChannelsEffect } from '../../models/card/effects/SwapColorChannelsEffect';
 import { COLOR_CHANNELS, ColorChannel } from '../../models/color/ColorChannel';
-import { AddColorDeckMode } from '../../models/rules/AddColorDeckMode';
+import { ColorDeckMode } from '../../models/rules/ColorDeckMode';
 import type { GameRules } from '../../models/rules/GameRules';
 import { IntegerRange } from '../../models/shared/IntegerRange';
 import type { RandomSource } from '../gateway/RandomSource';
@@ -28,24 +28,26 @@ function createRange(minimum: number, maximum: number): IntegerRange {
 
 // 注入された乱数供給源を使い、ルールに従うカードと山札を生成するFactory。
 export class GameDeckFactory {
-  private static readonly DOMINANT_CHANNEL_RANGE = createRange(40, 120);
+  private static readonly STRONG_COMPONENT_RANGE = createRange(40, 120);
   private static readonly SUPPORT_CHANNEL_RANGE = createRange(0, 20);
 
   // 山札生成中に共有する乱数供給源を保持する。
-  constructor(private readonly randomSource: RandomSource) { }
+  constructor(private readonly randomSource: RandomSource) {}
 
   // 指定ラウンドのルールに従う山札一式を生成する。
   create(args: { rules: GameRules; roundNumber: number }): readonly GameCard[] {
-    return args.rules.addColorDeckMode ===
-      AddColorDeckMode.BalancedDominantChannel
-      ? this.createBalancedDominantChannelDeck(args)
-      : Array.from({ length: args.rules.deckSize }, (_, index) =>
-        this.createCard({
-          rules: args.rules,
-          roundNumber: args.roundNumber,
-          cardNumber: index + 1,
-        }),
-      );
+    switch (args.rules.colorDeckMode) {
+      case ColorDeckMode.BalancedChannels:
+        return this.createBalancedDeck(args);
+      case ColorDeckMode.RandomMixed:
+        return Array.from({ length: args.rules.deckSize }, (_, index) =>
+          this.createCard({
+            rules: args.rules,
+            roundNumber: args.roundNumber,
+            cardNumber: index + 1,
+          }),
+        );
+    }
   }
 
   // カード生成Policyを使い、黒ではない通常カードまたは特殊カードを生成する。
@@ -55,7 +57,10 @@ export class GameDeckFactory {
     cardNumber: number;
   }): GameCard {
     const kind = args.rules.cardTypeDistribution.choose(this.randomSource);
-    if (kind !== CardEffectKind.AddColor) {
+    if (
+      kind !== CardEffectKind.AddColor &&
+      kind !== CardEffectKind.SubtractColor
+    ) {
       return this.createSpecialCard({ ...args, kind });
     }
     const { cardColorRange, cardColorGenerationPolicy } = args.rules;
@@ -72,18 +77,24 @@ export class GameDeckFactory {
       cardColorRange,
       this.randomSource,
     );
-    const card = GameCard.createAddColor(id, red, green, blue);
+    const card =
+      kind === CardEffectKind.AddColor
+        ? GameCard.createAddColor(id, red, green, blue)
+        : GameCard.createSubtractColor(id, red, green, blue);
 
     if (card instanceof GameCard) return card;
     if (card === GameCardCreationFailure.Black) {
-      const nonBlackCard = GameCard.createAddColor(id, red, green, 1);
+      const nonBlackCard =
+        kind === CardEffectKind.AddColor
+          ? GameCard.createAddColor(id, red, green, 1)
+          : GameCard.createSubtractColor(id, red, green, 1);
       if (nonBlackCard instanceof GameCard) return nonBlackCard;
     }
     throw new RangeError(`Random source returned an invalid card: ${card}`);
   }
 
-  // 各色を主成分とするカードを同数含む混色カード山札を生成する。
-  private createBalancedDominantChannelDeck(args: {
+  // RGB変化量の主成分を同数含み、Effectで加算・減算を決める山札を生成する。
+  private createBalancedDeck(args: {
     rules: GameRules;
     roundNumber: number;
   }): readonly GameCard[] {
@@ -92,59 +103,93 @@ export class GameDeckFactory {
       Array.from({ length: cardsPerChannel }, () => channel),
     );
     const deck = channels.map((channel, index) =>
-      this.createDominantChannelCard({
+      this.createBalancedColorCard({
         id: `round-${args.roundNumber}-card-${index + 1}`,
         channel,
+        kind: args.rules.cardTypeDistribution.choose(this.randomSource),
       }),
     );
 
-    // NOTE: 色ごとの枚数を維持したまま公開順だけをラウンドごとに変える。
+    this.shuffle(deck);
+    return deck;
+  }
+
+  // 主成分つきのRGB変化量を、指定された加算または減算Effectへ渡す。
+  private createBalancedColorCard(args: {
+    id: string;
+    channel: ColorChannel;
+    kind: CardEffectKind;
+  }): GameCard {
+    if (
+      args.kind !== CardEffectKind.AddColor &&
+      args.kind !== CardEffectKind.SubtractColor
+    ) {
+      throw new RangeError(
+        'Balanced color decks support only add or subtract effects.',
+      );
+    }
+    const amounts = this.createChannelAmounts(args.channel);
+    const card =
+      args.kind === CardEffectKind.AddColor
+        ? GameCard.createAddColor(
+            args.id,
+            amounts.red,
+            amounts.green,
+            amounts.blue,
+          )
+        : GameCard.createSubtractColor(
+            args.id,
+            amounts.red,
+            amounts.green,
+            amounts.blue,
+          );
+    if (!(card instanceof GameCard)) {
+      throw new RangeError(`Could not create color card: ${card}`);
+    }
+    return card;
+  }
+
+  // 主成分とほかの成分に、それぞれの範囲からRGB変化量を割り当てる。
+  private createChannelAmounts(primary: ColorChannel): {
+    red: number;
+    green: number;
+    blue: number;
+  } {
+    return {
+      red: this.createChannelAmount(primary, ColorChannel.Red),
+      green: this.createChannelAmount(primary, ColorChannel.Green),
+      blue: this.createChannelAmount(primary, ColorChannel.Blue),
+    };
+  }
+
+  // 対象が主成分かどうかに応じて強い量または弱い揺らぎを生成する。
+  private createChannelAmount(
+    primary: ColorChannel,
+    channel: ColorChannel,
+  ): number {
+    return this.randomSource.nextInteger(
+      primary === channel
+        ? GameDeckFactory.STRONG_COMPONENT_RANGE
+        : GameDeckFactory.SUPPORT_CHANNEL_RANGE,
+    );
+  }
+
+  // 山札内の枚数を維持したまま公開順をランダムに並べ替える。
+  private shuffle(deck: GameCard[]): void {
     for (let index = deck.length - 1; index > 0; index -= 1) {
       const swapIndex = this.randomSource.nextInteger(createRange(0, index));
       [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
     }
-    return deck;
-  }
-
-  // 指定成分を主成分とし、他成分には小さな揺らぎを持つ加算カードを生成する。
-  private createDominantChannelCard(args: {
-    id: string;
-    channel: ColorChannel;
-  }): GameCard {
-    const channels = {
-      red: this.randomSource.nextInteger(
-        args.channel === ColorChannel.Red
-          ? GameDeckFactory.DOMINANT_CHANNEL_RANGE
-          : GameDeckFactory.SUPPORT_CHANNEL_RANGE,
-      ),
-      green: this.randomSource.nextInteger(
-        args.channel === ColorChannel.Green
-          ? GameDeckFactory.DOMINANT_CHANNEL_RANGE
-          : GameDeckFactory.SUPPORT_CHANNEL_RANGE,
-      ),
-      blue: this.randomSource.nextInteger(
-        args.channel === ColorChannel.Blue
-          ? GameDeckFactory.DOMINANT_CHANNEL_RANGE
-          : GameDeckFactory.SUPPORT_CHANNEL_RANGE,
-      ),
-    };
-    const card = GameCard.createAddColor(
-      args.id,
-      channels.red,
-      channels.green,
-      channels.blue,
-    );
-    if (!(card instanceof GameCard)) {
-      throw new RangeError(`Could not create dominant-channel card: ${card}`);
-    }
-    return card;
   }
 
   // 選ばれた種類に応じ、固有値を持つ特殊効果カードを生成する。
   private createSpecialCard(args: {
     roundNumber: number;
     cardNumber: number;
-    kind: Exclude<CardEffectKind, CardEffectKind.AddColor>;
+    kind: Exclude<
+      CardEffectKind,
+      CardEffectKind.AddColor | CardEffectKind.SubtractColor
+    >;
   }): GameCard {
     const id = `round-${args.roundNumber}-card-${args.cardNumber}`;
     const channelIndex = this.randomSource.nextInteger(createRange(0, 2));

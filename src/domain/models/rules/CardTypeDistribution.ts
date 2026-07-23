@@ -1,5 +1,5 @@
 import { CardEffectKind } from '../card/effects/CardEffect';
-import type { RandomSource } from '../../repositories/RandomSource';
+import type { RandomSource } from '../../usecases/gateway/RandomSource';
 import { IntegerRange } from '../shared/IntegerRange';
 
 // カード種類ごとの相対的な出現率を表す設定値。
@@ -59,6 +59,13 @@ export class CardTypeDistribution {
   static addColorOnly(): CardTypeDistribution {
     return new CardTypeDistribution(createCardTypeWeights({ addColor: 100 }));
   }
+
+  // 通常CMY減算カードだけが出現する分布を生成する。
+  static subtractColorOnly(): CardTypeDistribution {
+    return new CardTypeDistribution(
+      createCardTypeWeights({ subtractColor: 100 }),
+    );
+  }
 }
 
 // 未指定種類を0としてカード出現率一式を生成する。
@@ -67,6 +74,7 @@ export function createCardTypeWeights(
 ): CardTypeWeights {
   return {
     [CardEffectKind.AddColor]: weights[CardEffectKind.AddColor] ?? 0,
+    [CardEffectKind.SubtractColor]: weights[CardEffectKind.SubtractColor] ?? 0,
     [CardEffectKind.AdjustChannels]:
       weights[CardEffectKind.AdjustChannels] ?? 0,
     [CardEffectKind.SwapChannels]: weights[CardEffectKind.SwapChannels] ?? 0,

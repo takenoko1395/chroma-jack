@@ -10,6 +10,11 @@ describe('GameCard', () => {
     expect(card).toBeInstanceOf(GameCard);
   });
 
+  it('CMY減算効果を持つ通常カードを生成する', () => {
+    const card = GameCard.createSubtractColor('card', 10, 20, 30);
+    expect(card).toBeInstanceOf(GameCard);
+  });
+
   it.each([
     ['', 1, 1, 1, GameCardCreationFailure.EmptyId],
     ['card', -1, 1, 1, GameCardCreationFailure.InvalidChannel],
@@ -33,5 +38,24 @@ describe('GameCard', () => {
 
     expect(addition.burstHand).toBeNull();
     expect(addition.hand.color).toMatchObject({ red: 11, green: 22, blue: 33 });
+  });
+
+  it('SubtractColorEffectを通じてHandから色を引く', () => {
+    const color = Color.create(100, 100, 100);
+    const card = GameCard.createSubtractColor('card', 10, 20, 30);
+    if (!(color instanceof Color) || !(card instanceof GameCard)) return;
+
+    const subtraction = card.applyTo({
+      hand: new Hand(color),
+      overflowPolicy: OverflowPolicy.classic(),
+      canPreventBurst: false,
+    });
+
+    expect(subtraction.burstHand).toBeNull();
+    expect(subtraction.hand.color).toMatchObject({
+      red: 90,
+      green: 80,
+      blue: 70,
+    });
   });
 });

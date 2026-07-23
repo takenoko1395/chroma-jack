@@ -39,14 +39,22 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
-  it('Classicを初期選択し、開始前にClamp Challengeへ変更できる', async () => {
+  it('RGB加算を初期選択し、開始前にCMY減算やClamp Challengeへ変更できる', async () => {
     const user = userEvent.setup();
     renderApp();
 
     const rulesSelect = screen.getByRole('combobox', {
       name: 'ゲームルール',
     });
-    expect(rulesSelect).toHaveTextContent('Classic');
+    expect(rulesSelect).toHaveTextContent('RGB Additive');
+
+    await user.click(rulesSelect);
+    await user.click(screen.getByRole('option', { name: 'CMY Subtractive' }));
+
+    expect(rulesSelect).toHaveTextContent('CMY Subtractive');
+    expect(
+      screen.getByText(/CMYでRGBを減算して黒を目指します/),
+    ).toBeInTheDocument();
 
     await user.click(rulesSelect);
     await user.click(screen.getByRole('option', { name: 'Clamp Challenge' }));

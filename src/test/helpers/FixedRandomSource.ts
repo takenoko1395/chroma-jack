@@ -1,5 +1,5 @@
 import type { IntegerRange } from '../../domain/models/shared/IntegerRange';
-import type { RandomSource } from '../../domain/repositories/RandomSource';
+import type { RandomSource } from '../../domain/usecases/gateway/RandomSource';
 
 // テストで指定した値を順番に返す決定的な乱数供給源。
 export class FixedRandomSource implements RandomSource {

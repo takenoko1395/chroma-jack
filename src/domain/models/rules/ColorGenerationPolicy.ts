@@ -1,4 +1,4 @@
-import type { RandomSource } from '../../repositories/RandomSource';
+import type { RandomSource } from '../../usecases/gateway/RandomSource';
 import type { IntegerRange } from '../shared/IntegerRange';
 
 // 範囲内の乱数をどちら側へ偏らせるかを示す。

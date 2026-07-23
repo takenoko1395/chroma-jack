@@ -6,12 +6,12 @@ import {
   ColorGenerationTrend,
 } from './ColorGenerationPolicy';
 import { OverflowPolicy } from './OverflowPolicy';
-import { ScorePolicy } from './ScorePolicy';
+import { ScorePolicy, ScoreTarget } from './ScorePolicy';
 import {
   CardTypeDistribution,
   createCardTypeWeights,
 } from './CardTypeDistribution';
-import { AddColorDeckMode } from './AddColorDeckMode';
+import { ColorDeckMode } from './ColorDeckMode';
 
 // 固定値から検証済みのルール用整数範囲を生成する。
 function createRange(minimum: number, maximum: number): IntegerRange {
@@ -32,7 +32,7 @@ export type GameRulesArgs = Readonly<{
   cardColorRange: IntegerRange;
   initialColorGenerationPolicy: ColorGenerationPolicy;
   cardColorGenerationPolicy: ColorGenerationPolicy;
-  addColorDeckMode: AddColorDeckMode;
+  colorDeckMode: ColorDeckMode;
   cardTypeDistribution: CardTypeDistribution;
   overflowPolicy: OverflowPolicy;
   scorePolicy: ScorePolicy;
@@ -48,7 +48,7 @@ export class GameRules {
   readonly cardColorRange: IntegerRange;
   readonly initialColorGenerationPolicy: ColorGenerationPolicy;
   readonly cardColorGenerationPolicy: ColorGenerationPolicy;
-  readonly addColorDeckMode: AddColorDeckMode;
+  readonly colorDeckMode: ColorDeckMode;
   readonly cardTypeDistribution: CardTypeDistribution;
   readonly overflowPolicy: OverflowPolicy;
   readonly scorePolicy: ScorePolicy;
@@ -88,11 +88,11 @@ export class GameRules {
       );
     }
     if (
-      args.addColorDeckMode === AddColorDeckMode.BalancedDominantChannel &&
+      args.colorDeckMode !== ColorDeckMode.RandomMixed &&
       args.deckSize % 3 !== 0
     ) {
       throw new RangeError(
-        'A balanced dominant-channel deck size must be divisible by three.',
+        'A balanced channel deck size must be divisible by three.',
       );
     }
 
@@ -104,7 +104,7 @@ export class GameRules {
     this.cardColorRange = args.cardColorRange;
     this.initialColorGenerationPolicy = args.initialColorGenerationPolicy;
     this.cardColorGenerationPolicy = args.cardColorGenerationPolicy;
-    this.addColorDeckMode = args.addColorDeckMode;
+    this.colorDeckMode = args.colorDeckMode;
     this.cardTypeDistribution = args.cardTypeDistribution;
     this.overflowPolicy = args.overflowPolicy;
     this.scorePolicy = args.scorePolicy;
@@ -128,10 +128,43 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
-      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
+      colorDeckMode: ColorDeckMode.BalancedChannels,
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.classic(),
-      scorePolicy: new ScorePolicy(1000, 0),
+      scorePolicy: new ScorePolicy({
+        maximumScore: 1000,
+        clampPenalty: 0,
+        target: ScoreTarget.White,
+      }),
+    });
+  }
+
+  // 明るい初期色からCMYを減算し、黒を目指す基本ルールを生成する。
+  static cmySubtractive(): GameRules {
+    return new GameRules({
+      id: 'cmy-subtractive',
+      totalRounds: 5,
+      deckSize: 12,
+      cardOfferSize: 1,
+      initialColorRange: createRange(235, Hand.CHANNEL_LIMIT),
+      cardColorRange: createRange(
+        GameCard.MINIMUM_CHANNEL,
+        GameCard.MAXIMUM_CHANNEL,
+      ),
+      initialColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Higher,
+      ),
+      cardColorGenerationPolicy: new ColorGenerationPolicy(
+        ColorGenerationTrend.Uniform,
+      ),
+      colorDeckMode: ColorDeckMode.BalancedChannels,
+      cardTypeDistribution: CardTypeDistribution.subtractColorOnly(),
+      overflowPolicy: OverflowPolicy.classic(),
+      scorePolicy: new ScorePolicy({
+        maximumScore: 1000,
+        clampPenalty: 0,
+        target: ScoreTarget.Black,
+      }),
     });
   }
 
@@ -153,10 +186,14 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Higher,
       ),
-      addColorDeckMode: AddColorDeckMode.BalancedDominantChannel,
+      colorDeckMode: ColorDeckMode.BalancedChannels,
       cardTypeDistribution: CardTypeDistribution.addColorOnly(),
       overflowPolicy: OverflowPolicy.clampAndContinue(1),
-      scorePolicy: new ScorePolicy(1000, 200),
+      scorePolicy: new ScorePolicy({
+        maximumScore: 1000,
+        clampPenalty: 200,
+        target: ScoreTarget.White,
+      }),
     });
   }
 
@@ -178,7 +215,7 @@ export class GameRules {
       cardColorGenerationPolicy: new ColorGenerationPolicy(
         ColorGenerationTrend.Uniform,
       ),
-      addColorDeckMode: AddColorDeckMode.RandomMixed,
+      colorDeckMode: ColorDeckMode.RandomMixed,
       cardTypeDistribution: new CardTypeDistribution(
         createCardTypeWeights({
           addColor: 60,
@@ -191,7 +228,11 @@ export class GameRules {
         }),
       ),
       overflowPolicy: OverflowPolicy.classic(),
-      scorePolicy: new ScorePolicy(1000, 0),
+      scorePolicy: new ScorePolicy({
+        maximumScore: 1000,
+        clampPenalty: 0,
+        target: ScoreTarget.White,
+      }),
     });
   }
 }

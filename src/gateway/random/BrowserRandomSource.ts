@@ -1,5 +1,5 @@
 import type { IntegerRange } from '../../domain/models/shared/IntegerRange';
-import type { RandomSource } from '../../domain/repositories/RandomSource';
+import type { RandomSource } from '../../domain/usecases/gateway/RandomSource';
 
 // Math.randomをDomainの乱数供給契約へ適合させるGateway。
 export class BrowserRandomSource implements RandomSource {

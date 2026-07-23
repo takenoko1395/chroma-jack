@@ -2,7 +2,7 @@ import { Color } from '../../models/color/Color';
 import { GameRound } from '../../models/game/GameRound';
 import { Hand } from '../../models/hand/Hand';
 import type { GameRules } from '../../models/rules/GameRules';
-import type { RandomSource } from '../../usecases/gateway/RandomSource';
+import type { RandomSource } from '../gateway/RandomSource';
 import type { GameDeckFactory } from './GameDeckFactory';
 
 // 初期Handと山札から新しいラウンド状態を組み立てるFactory。
@@ -11,7 +11,7 @@ export class GameRoundFactory {
   constructor(
     private readonly randomSource: RandomSource,
     private readonly deckFactory: GameDeckFactory,
-  ) { }
+  ) {}
 
   // 指定ルールとラウンド番号から開始直後のラウンドを生成する。
   create(args: { rules: GameRules; roundNumber: number }): GameRound {

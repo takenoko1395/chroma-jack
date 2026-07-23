@@ -15,6 +15,16 @@ describe('createGameCardViewModel', () => {
     expect(viewModel.titleKey).toBe('cards.addColor');
   });
 
+  it('CMY減算量をカード面のRGB色へ変換する', () => {
+    const card = GameCard.createSubtractColor('subtract', 100, 20, 10);
+    if (!(card instanceof GameCard)) return;
+
+    const viewModel = createGameCardViewModel(card);
+
+    expect(viewModel.backgroundColor).toBe('rgb(155, 235, 245)');
+    expect(viewModel.titleKey).toBe('cards.subtractColor');
+  });
+
   it('特殊効果をPresentation固有の色と模様へ変換する', () => {
     const card = GameCard.createSpecial({
       id: 'prevent',

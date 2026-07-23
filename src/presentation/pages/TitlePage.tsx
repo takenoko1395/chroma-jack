@@ -103,7 +103,6 @@ export function TitlePage({
             defaultValue: t('rules.custom.description'),
           })}
           <br />
-          {t('title.trust')}
         </Typography>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}

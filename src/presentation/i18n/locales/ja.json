@@ -1,18 +1,21 @@
 {
-  "language": { "label": "表示言語", "ja": "日本語", "en": "English" },
+  "language": {
+    "label": "表示言語",
+    "ja": "日本語",
+    "en": "English"
+  },
   "title": {
     "tagline": "色だけを頼りに、目標色へ近づこう。",
-    "trust": "数字ではなく、色だけを信じてください。",
     "rulesLabel": "ゲームルール",
     "start": "ゲームを始める"
   },
   "rules": {
     "classic": {
-      "label": "RGB Additive",
+      "label": "光を重ねて白を目指す",
       "description": "RGBを加算して白を目指します。色を加えすぎるとその時点でラウンド終了です。"
     },
     "cmySubtractive": {
-      "label": "CMY Subtractive",
+      "label": "絵の具を混ぜて黒を目指す",
       "description": "CMYでRGBを減算して黒を目指します。色を引きすぎるとその時点でラウンド終了です。"
     },
     "clampChallenge": {

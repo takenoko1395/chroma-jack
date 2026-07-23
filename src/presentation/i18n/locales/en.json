@@ -1,8 +1,11 @@
 {
-  "language": { "label": "Language", "ja": "日本語", "en": "English" },
+  "language": {
+    "label": "Language",
+    "ja": "日本語",
+    "en": "English"
+  },
   "title": {
     "tagline": "Trust the colors and move toward the target.",
-    "trust": "Trust the colors, not the numbers.",
     "rulesLabel": "Game rules",
     "start": "Start game"
   },
